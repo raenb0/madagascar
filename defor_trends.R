@@ -5,7 +5,9 @@ library(sf)
 library(ggplot2)
 library(tidyverse) #note this overwrites some raster package functions extract() and select()
 
-setwd("C:/Users/raenb/Google Drive/Documents/GIS/_Madagascar_Political_Conflict_Analyses/_working_folder")
+# setwd("C:/Users/raenb/Google Drive/Documents/GIS/_Madagascar_Political_Conflict_Analyses/_working_folder") #original data folder
+
+setwd("C:/Users/raenb/Documents/GitHub/madagascar") #new data subfolder (default)
 
 
 # misc code chunks --------------------------------------------------------
@@ -19,47 +21,47 @@ setwd("C:/Users/raenb/Google Drive/Documents/GIS/_Madagascar_Political_Conflict_
 
 # total forest area in each time period (resolution: 30 x 30)
 
-for90 <- raster("./forest/for1990.tif")
-for00 <- raster("./forest/for2000.tif")
-for05 <- raster("./forest/for2005.tif")
-for10 <- raster("./forest/for2010.tif")
-for14 <- raster("./forest/for2014.tif")
+for90 <- raster("data/forest/for1990.tif")
+for00 <- raster("data/forest/for2000.tif")
+for05 <- raster("data/forest/for2005.tif")
+for10 <- raster("data/forest/for2010.tif")
+for14 <- raster("data/forest/for2014.tif")
 
 # repeat but using a raster stack instead of individual rasters
 
-forest_stack <- list.files("./forest/", pattern = "*.tif$", full.names = TRUE) %>%
+forest_stack <- list.files("data/forest/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
 # forest masked to CFM areas in each time period (resolution: 30 x 30)
 
-cfm_for90 <- raster("./cfm_pre05_forest_utm/cfm_p05_for90.tif") #note I left out pre-05 from object names
-cfm_for00 <- raster("./cfm_pre05_forest_utm/cfm_p05_for00.tif")
-cfm_for05 <- raster("./cfm_pre05_forest_utm/cfm_p05_for05.tif")
-cfm_for10 <- raster("./cfm_pre05_forest_utm/cfm_p05_for10.tif")
-cfm_for14 <- raster("./cfm_pre05_forest_utm/cfm_p05_for14.tif")
+cfm_for90 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for90.tif") #note I left out pre-05 from object names
+cfm_for00 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for00.tif")
+cfm_for05 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for05.tif")
+cfm_for10 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for10.tif")
+cfm_for14 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for14.tif")
 
 # repeat using a raster stack
-cfm_p05_for_stack <- list.files("./cfm_pre05_forest_utm/", pattern = "*.tif$", full.names = TRUE) %>%
+cfm_p05_for_stack <- list.files("data/cfm_pre05_forest_utm/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
 # forest masked to PAs in each time period (resolution: 30 x 30)
 
-pa_for90 <- raster("./PA_forest/PA_for90.tif")
-pa_for00 <- raster("./PA_forest/PA_for00.tif")
-pa_for05 <- raster("./PA_forest/PA_for05.tif")
-pa_for10 <- raster("./PA_forest/PA_for10.tif")
-pa_for14 <- raster("./PA_forest/PA_for14.tif")
+pa_for90 <- raster("data/pa_forest/PA_for90.tif")
+pa_for00 <- raster("data/pa_forest/PA_for00.tif")
+pa_for05 <- raster("data/pa_forest/PA_for05.tif")
+pa_for10 <- raster("data/pa_forest/PA_for10.tif")
+pa_for14 <- raster("data/pa_forest/PA_for14.tif")
 
 # repeat using a raster stack
-pa_for_stack <- list.files("./PA_forest/", pattern = "*.tif$", full.names = TRUE) %>%
+pa_for_stack <- list.files("data/pa_forest/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
 # population in each time period (resolution: 919.4886, 919.4886 so needs to be resampled)
 
-pop00 <- raster("./Landscan/lspop2000_UTM.tif")
-pop05 <- raster("./Landscan/lspop2005_UTM.tif")
-pop10 <- raster("./Landscan/lspop2010_UTM.tif")
-pop14 <- raster("./Landscan/lspop2014_UTM.tif")
+pop00 <- raster("data/covariates/lspop2000_UTM.tif")
+pop05 <- raster("data/covariates/lspop2005_UTM.tif")
+pop10 <- raster("data/covariates/lspop2010_UTM.tif")
+pop14 <- raster("data/covariates/lspop2014_UTM.tif")
 
 #re-project population rasters to get extents to be identical to create a raster stack 
 pop05 <- projectRaster(from=pop05, to = pop00)
@@ -141,9 +143,9 @@ defor_trends <- data.frame("Year" = c("1990","2000", "2005", "2010","2014"),
                            "CFM" = c(sum_cfm_for90, sum_cfm_for00, sum_cfm_for05, sum_cfm_for10, sum_cfm_for14),
                            "PA" = c(sum_pa_for90, sum_pa_for00, sum_pa_for05, sum_pa_for10, sum_pa_for14))
 defor_trends
-write.csv(defor_trends,"defor_trends.csv")
+write.csv(defor_trends,"results/defor_trends.csv")
 
-defor_trends <- read_csv("defor_trends.csv")
+defor_trends <- read_csv("results/defor_trends.csv")
 
 ggplot(data = defor_trends) +
   geom_point(mapping = aes(x = Year, y = CFM), color = "blue") +
@@ -166,33 +168,33 @@ ggplot(data = defor_trends) +
 
 # agricultural suitability (resolution 9198.335, 9198.335)
 
-ag <- raster("./agr_su_utm.tif")
+ag <- raster("data/covariates/agr_su_utm.tif")
 
 #ag #check resolution, projection
 
 # distance from cart tracks (resolution 91.8397, 91.8397)
 
-dist_cart <- raster("./dist_cart_utm.tif")
+dist_cart <- raster("data/covariates/dist_cart_utm.tif")
 
 # distance from roads (resolution 91.8397, 91.8397)
 
-dist_road <- raster("./dist_road_utm.tif")
+dist_road <- raster("data/covariates/dist_road_utm.tif")
 
 # distance from urban areas (resolution 91.8397, 91.8397)
 
-dist_urban <- raster("./dist_urb_utm.tif")
+dist_urban <- raster("data/covariates/dist_urb_utm.tif")
 
 # distance from villages (resolution 91.8397, 91.8397)
 
-dist_vil <- raster("./dist_vil_utm.tif")
+dist_vil <- raster("data/covariates/dist_vil_utm.tif")
 
 # suitability for rice (0 is unsuitable, 1 is suitable) (resolution 91.8397, 91.8397)
 
-rice <- raster("./paddy_thr_utm.tif")
+rice <- raster("data/covariates/paddy_thr_utm.tif")
 
 # slope (resolution 91.8397, 91.8397)
 
-slope <- raster("./slope_utm.tif")
+slope <- raster("data/covariates/slope_utm.tif")
 
 
 
@@ -200,23 +202,23 @@ slope <- raster("./slope_utm.tif")
 
 # vegetation types
 
-veg_types <- read_sf("./veg_types_UTM.shp") 
+veg_types <- read_sf("data/covariates/veg_types_UTM.shp") 
 
 # protected areas
 
-protected_areas <- read_sf("./MNP_PA_UTM.shp")
+protected_areas <- read_sf("data/cfm_pa/MNP_PA_UTM.shp")
 
 # CFM areas (all)
 
-cfm_all <- read_sf("./CFM_all_fix.shp") #there's also CFM_all_UTM.shp if this one has issues
+cfm_all <- read_sf("data/cfm_pa/CFM_all_UTM.shp") #there's also CFM_all_fix.shp if this one has issues
 
 # CFM areas (pre-2005)
 
-cfm_pre05 <- read_sf("./CFM_pre05_UTM.shp")
+cfm_pre05 <- read_sf("data/cfm_pa/CFM_pre05_UTM.shp")
 
 # communes 
 
-communes <- read_sf("./communes_UTM.shp")
+communes <- read_sf("data/covariates/communes_UTM.shp")
 
 
 
