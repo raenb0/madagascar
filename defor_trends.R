@@ -236,11 +236,43 @@ template_10km <- raster(xmn = 298440, xmx = 1100820, ymn = 7155900, ymx = 868242
 
 # re-sample (warp) all rasters to the same extent and resolution ----------
 
+# Code from Matt S-M
+
+# just grab a single layer to use to create templates
+template_1km <- raster("data/forest/for1990.tif") %>% 
+  # this removes all the values from the raster
+  # just keeps the extent, resolution, and projection
+  raster()
+# change the resolution
+res(template_1km) <- 1000
+
+# now reproject changing resolution using gdal
+e <- extent(template_1km)
+crs <- projection(template_1km)
+
+# this is your gdalwarp command
+cmd <- str_glue("gdalwarp -tr 1000 1000 -te {e@xmin} {e@ymin} {e@xmax} {e@ymax} ",
+                "-t_srs '{projection(template_1km)}' ",
+                # aggregate using the average, other options available here
+                # https://gdal.org/programs/gdalwarp.html
+                "-r average ",
+                "forest/for1990.tif for1990_1km.tif")
+
+# run this at the command line directly
+print(cmd)
+
+# or run the command using r with
+system(cmd)
+
+# you can then aggregate to your 10km resolution option with
+for1990_1km <- raster("for1990_1km.tif")
+for1990_10km <- aggregate(r1km, fact = 10, fun = mean, filename = "forest1990_10km.tif")
+
 
 
 # create a random sample of grid cells ------------------------------------
 
-#example from https://gis.stackexchange.com/questions/291446/generating-random-points-inside-raster-boundary-using-r
+# Rachel's attempt, using example from https://gis.stackexchange.com/questions/291446/generating-random-points-inside-raster-boundary-using-r
 
 # which cells are not NA? 
 notna <- which(!is.na(values(cfm_for90)))
@@ -282,6 +314,28 @@ crs(samp_sp) <- CRS('+init=epsg:4326')
 
 library(sf)
 samp_sf <- st_as_sf(as.data.frame(samp_cfm_for90), coords = c('x', 'y'), crs = 4326)
+
+
+# Matt's code for sampling ------------------------------------------------
+
+#In terms of creating a random sample of cells, you can stack() all the layers once they're all aligned and in the 
+# same projection. Make sure the layers are named sensibly in the stack, the names come from the filenames, so just 
+# make sure the files are named nicely. Then use
+
+library(raster)
+library(sf)
+
+forest_annual_stack <- list.files("data/forest_annual_30m/", pattern = "*.tif$", full.names = TRUE) %>%
+  stack()
+
+sample <- sampleRandom(forest_annual_stack, size = 100, cells = TRUE, sp = TRUE) %>% # I assume "s" is the stack?
+  st_as_sf()
+
+write_sf(sample, "sampled-cells_1km.gpkg")
+
+# This will create a GeoPackage storing the sampled cells in a spatial format. If you don't care about the spatial 
+# component, you could convert to a data frame with st_drop_geometry(sample).
+
 
 
 
