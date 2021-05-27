@@ -45,6 +45,7 @@ cmd <- str_glue("gdalwarp -tr 1000 1000 -te {e@xmin} {e@ymin} {e@xmax} {e@ymax} 
 # or run the command using r with
 system(cmd)
 
-# you can then aggregate to your 10km resolution option with
+# you can then aggregate to your 300m resolution option with
 r30m <- raster("data/forest/for1990.tif")
+r90m <- aggregate(r30m, fact = 3, fun = mean, filename = "data/results/forest1990_90m.tif")
 r300m <- aggregate(r30m, fact = 10, fun = mean, filename = "data/results/forest1990_300m.tif")
