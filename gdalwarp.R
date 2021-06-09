@@ -34,7 +34,7 @@ res(template_300m) #check
 e <- extent(template_90m)
 crs <- projection(template_90m)
 # this is your gdalwarp command
-cmd <- str_glue("gdalwarp -tr 1000 1000 -te {e@xmin} {e@ymin} {e@xmax} {e@ymax} ",
+cmd <- str_glue("gdalwarp -tr 90 90 -te {e@xmin} {e@ymin} {e@xmax} {e@ymax} ",
                 "-t_srs '{projection(template_90m)}' ",
                 # aggregate using the average, other options available here
                 # https://gdal.org/programs/gdalwarp.html
@@ -47,5 +47,10 @@ system(cmd)
 
 # you can then aggregate to your 300m resolution option with
 r30m <- raster("data/forest/for1990.tif")
-r90m <- aggregate(r30m, fact = 3, fun = mean, filename = "data/results/forest1990_90m.tif")
-r300m <- aggregate(r30m, fact = 10, fun = mean, filename = "data/results/forest1990_300m.tif")
+r90m <- aggregate(r30m, fact = 3, fun = sum)#, filename = "data/results/forest1990_90m.tif")
+r90m_pct <- r90m / 9 #this takes the above summed raster and divides by 9 (count of 30m grid cells per 90m grid cell) to get forest cover as a percentage
+writeRaster(r90m_pct, filename = "data/results/forest1990_90m_pct.tif", overwrite=TRUE)
+
+r300m <- aggregate(r30m, fact = 10, fun = sum)#, filename = "data/results/forest1990_300m.tif")
+r300m_pct <- r300m / 100 #divide by 100 (count of 30m grid cells per 300m grid cell)
+writeRaster(r300m_pct, filename = "data/results/forest1990_300m_pct.tif", overwrite=TRUE)
