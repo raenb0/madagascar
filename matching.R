@@ -3,11 +3,41 @@ library(Matching) # load "Matching" package
 
 setwd("C:/Users/raenb/Documents/GitHub/madagascar") # set working directory
 
+cfm_30m_data <- read_csv("data/sample_points/cfm_for00_data_30m.csv") # read CFM 30m data
+pa_30m_data <- read_csv("data/sample_points/pa_for00_data_30m.csv") # read PA 30m data
+
+cfm_90m_data <- read_csv("data/sample_points/cfm_for00_data_90m.csv") # 90m data
+pa_90m_data <- read_csv("data/sample_points/pa_for00_data_90m.csv")
+
+cfm_300m_data <- read_csv("data/sample_points/cfm_for00_data_300m.csv") # 300m data
+pa_300m_data <- read_csv("data/sample_points/pa_for00_data_300m.csv")
+
+# remove CFM data point if PA ID has a value (those are sample points in areas that overlap both PAs and CFM areas)
+# and vice versa
+
+names(cfm_90m_data) #get variable names
+unique(cfm_90m_data$paidmsk) #get unique values of PA IDs - includes both 0 and NA, we want NA to be 0
+cfm_90m_data$paidmsk %>% replace_na(0) #replace NA values with 0
+unique(cfm_90m_data$paidmsk) #check if worked - no NA values anymore
+
+cfm_90m_filter <- cfm_90m_data %>%
+  filter(cfm_90m_data$paidmsk<=0) #remove rows where PA ID is not zero
+unique(cfm_90m_filter$paidmsk) #check if worked - only 0 values returned, worked
+
+#repeat for PA data
+names(pa_90m_data) #get variable names
+unique(pa_90m_data$cfmrstrid) #get unique values of CFM IDs - includes NA, we want NA to be 0
+#pa_90m_data$cfmrstrid %>% replace_na(0) #replace NA values with 0, doesn't work??
+#unique(pa_90m_data$cfmrstrid) #check if worked - didn't work??
+
+pa_90m_filter <- pa_90m_data %>%
+  filter(is.na(cfmrstrid)) #remove rows where PA ID is not NA
+unique(pa_90m_filter$cfmrstrid) #check if worked - only 0 values returned, worked
+#pa_90m_filter$cfmrstrid %>% replace_na(0) #tried again, still didn't work
+#unique(pa_90m_filter$cfmrstrid)  #still didn't work
 
 
-cfm_30m_data <- read_csv("data/sample_points/cfm_30m.csv") # read CFM data
-pa_30m_data <- read_csv("data/sample_points/pa_30m.csv") # read PA data
-
+# STOPPED HERE----------------------------------
 
 # We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
