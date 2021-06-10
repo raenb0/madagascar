@@ -3,14 +3,22 @@ library(Matching) # load "Matching" package
 
 setwd("C:/Users/raenb/Documents/GitHub/madagascar") # set working directory
 
-cfm_30m_data <- read_csv("data/sample_points/cfm_for00_data_30m.csv") # read CFM 30m data
-pa_30m_data <- read_csv("data/sample_points/pa_for00_data_30m.csv") # read PA 30m data
+#read in 30m data
 
-cfm_90m_data <- read_csv("data/sample_points/cfm_for00_data_90m.csv") # 90m data
+cfm_30m_data <- read_csv("data/sample_points/cfm_for00_data_30m.csv") # read CFM 30m data
+pa_30m_data <- read_csv("data/sample_points/pa_for00_data_30m.csv") #, col_types = cols(vegtypemsk = col_factor())
+
+# read in 90m data
+
+cfm_90m_data <- read_csv("data/sample_points/cfm_for00_data_90m.csv")
 pa_90m_data <- read_csv("data/sample_points/pa_for00_data_90m.csv")
 
-cfm_300m_data <- read_csv("data/sample_points/cfm_for00_data_300m.csv") # 300m data
+# read in 300m data
+
+cfm_300m_data <- read_csv("data/sample_points/cfm_for00_data_300m.csv") 
 pa_300m_data <- read_csv("data/sample_points/pa_for00_data_300m.csv")
+
+# working with 90m data to start
 
 # remove CFM data point if PA ID has a value (those are sample points in areas that overlap both PAs and CFM areas)
 # and vice versa
@@ -37,11 +45,26 @@ unique(pa_90m_filter$cfmrstrid) #check if worked - only 0 values returned, worke
 #unique(pa_90m_filter$cfmrstrid)  #still didn't work
 
 
+# add columns for CFM (0 or 1) and PA (0 or 1)
+
+cfm_90m_filter$CFM <- 1
+cfm_90m_filter$PA <- 0
+
+pa_90m_filter$CFM <- 0
+pa_90m_filter$PA <- 1
+
+# join tables
+
+names(cfm_90m_filter) #check if column variables are identical, looks good
+names(pa_90m_filter)
+
+cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes all rows in x or y
+
 # STOPPED HERE----------------------------------
 
 # We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
-Treat <- pcdata$CFM # Define treatment
+Treat <- cfm_pa_data_90m$CFM # Define treatment
 cov.names <- c("elev", "dist_road", "dist_cart", "dist_urb", "dist_vil", "rice", "agr", "slope", 
                "pop05", "DVSP", "veg") # Names of covariates used to match
 covs <- pcdata[cov.names] # Extract the covariates
