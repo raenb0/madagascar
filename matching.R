@@ -1,4 +1,5 @@
 library(tidyverse)
+library(dplyr)
 library(Matching) # load "Matching" package
 
 setwd("C:/Users/raenb/Documents/GitHub/madagascar") # set working directory
@@ -40,10 +41,9 @@ unique(pa_90m_data$cfmrstrid) #get unique values of CFM IDs - includes NA, we wa
 
 pa_90m_filter <- pa_90m_data %>%
   filter(is.na(cfmrstrid)) #remove rows where PA ID is not NA
-unique(pa_90m_filter$cfmrstrid) #check if worked - only 0 values returned, worked
+unique(pa_90m_filter$cfmrstrid) #check if worked - only NA values returned, worked
 #pa_90m_filter$cfmrstrid %>% replace_na(0) #tried again, still didn't work
 #unique(pa_90m_filter$cfmrstrid)  #still didn't work
-
 
 # add columns for CFM (0 or 1) and PA (0 or 1)
 
@@ -60,13 +60,18 @@ names(pa_90m_filter)
 
 cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes all rows in x or y
 
+cfm_pa_data_90m <- cfm_pa_data_90m %>% dplyr::select(-InclProb) #dropped first variable (InclProb) 
+
 # STOPPED HERE----------------------------------
 
 # We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
 Treat <- cfm_pa_data_90m$CFM # Define treatment
-cov.names <- c("elev", "dist_road", "dist_cart", "dist_urb", "dist_vil", "rice", "agr", "slope", 
-               "pop05", "DVSP", "veg") # Names of covariates used to match
+
+names(cfm_pa_data_90m)
+
+cov.names <- c("distcartutm","distroadutm","disturbutm","distvilutm","lspop2000UT","paddythrutm","precyrutm","slopeutm","vegtypemsk","durationrst","elevationut") # Names of covariates used to match **NOTE included population 2000
+
 covs <- pcdata[cov.names] # Extract the covariates
 Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", 
         "FALSE", "FALSE", "TRUE") # Logical vector to allow EXACT matching to be done for the "veg" variable (i.e., matching operates within each type of vegetation)
