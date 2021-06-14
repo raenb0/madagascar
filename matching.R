@@ -1,6 +1,7 @@
 library(tidyverse)
 library(dplyr)
-library(Matching) # load "Matching" package
+library(Matching)
+library(tidyr)
 
 setwd("C:/Users/raenb/Documents/GitHub/madagascar") # set working directory
 
@@ -36,14 +37,15 @@ unique(cfm_90m_filter$paidmsk) #check if worked - only 0 values returned, worked
 #repeat for PA data
 names(pa_90m_data) #get variable names
 unique(pa_90m_data$cfmrstrid) #get unique values of CFM IDs - includes NA, we want NA to be 0
-#pa_90m_data$cfmrstrid %>% replace_na(0) #replace NA values with 0, doesn't work??
-#unique(pa_90m_data$cfmrstrid) #check if worked - didn't work??
-
+#pa_90m_data$cfmrstrid %>% replace_na(0) #replace NA values with 0, doesn't work
+#unique(pa_90m_data$cfmrstrid) #check if worked - didn't work
+pa_90m_data <- pa_90m_data %>% 
+  mutate(cfmrstrid = replace(as.numeric(cfmrstrid), which(is.na(cfmrstrid)), 0))
+unique(pa_90m_data$cfmrstrid) # WORKED!!
+         
 pa_90m_filter <- pa_90m_data %>%
-  filter(is.na(cfmrstrid)) #remove rows where PA ID is not NA
-unique(pa_90m_filter$cfmrstrid) #check if worked - only NA values returned, worked
-#pa_90m_filter$cfmrstrid %>% replace_na(0) #tried again, still didn't work
-#unique(pa_90m_filter$cfmrstrid)  #still didn't work
+  filter(cfmrstrid<=0) #remove rows where PA ID is not NA
+unique(pa_90m_filter$cfmrstrid) #check if worked - only 0 values returned, worked
 
 # add columns for CFM (0 or 1) and PA (0 or 1)
 
@@ -62,17 +64,21 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 
 cfm_pa_data_90m <- cfm_pa_data_90m %>% dplyr::select(-InclProb) #dropped first variable (InclProb) 
 
-# STOPPED HERE----------------------------------
+cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m)
 
 # We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
-Treat <- cfm_pa_data_90m$CFM # Define treatment
+Treat <- cfm_pa_data_90m_no_na$CFM # Define treatment
 
-names(cfm_pa_data_90m)
+names(cfm_pa_data_90m_no_na)
 
-cov.names <- c("distcartutm","distroadutm","disturbutm","distvilutm","lspop2000UT","paddythrutm","precyrutm","slopeutm","vegtypemsk","durationrst","elevationut") # Names of covariates used to match **NOTE included population 2000
+cfm_pa_data_90m_no_na <- rename(cfm_pa_data_90m_no_na, dist_cart = distcartutm, dist_road = distroadutm, dist_urb = disturbutm, dist_vil = distvilutm, DVSP = durationrst, elev = elevationut, pop00 = lspop2000UT, rice = paddythrutm, precip = precyrutm, slope = slopeutm, veg = vegtypemsk) #rename the covariates
 
-covs <- pcdata[cov.names] # Extract the covariates
+cov.names <- c("dist_cart","dist_road","dist_urb","dist_vil","DVSP","elev","pop00","rice","precip","slope","veg") # Names of covariates used to match **NOTE alphabetical order, included population 2000
+
+
+covs <- cfm_pa_data_90m_no_na[cov.names] # Extract the covariates
+
 Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", 
         "FALSE", "FALSE", "TRUE") # Logical vector to allow EXACT matching to be done for the "veg" variable (i.e., matching operates within each type of vegetation)
 
@@ -87,12 +93,15 @@ Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE",
 # V deals with the homoscedasticity assumption in linear model (t-test is a lineal model). V define the variables for which homoscedasticity-robust variances will be calculated
 # What we want is the ATT (Average effect of Treatment on the Treated). So, we leave the argument estimand to its defauld (i.e., "ATT")
 # Weight = 2 specifies Mahalanobis distance matching
+
 m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex,replace=TRUE, ties=TRUE, Weight=2) # run matching
 
 ## CHECK COVARIATE BALANCE
 
-mb1 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + rice + agr + slope + pop05 + DVSP + veg,
-                    match.out = m1, nboots = 500, data=pcdata) 
+names(covs)
+
+mb1 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + precip + slope + pop00 + DVSP + veg,
+                    match.out = m1, nboots = 500, data=cfm_pa_data_90m_no_na) 
 
 #Update: Ranaivo said to replace "covs" with the list of covariates we actually want to use to match on
 # Ranaivo: Do not worry about the p-values of the balance statistics. We have large sample. So, p-values are likely to be significant
@@ -100,31 +109,35 @@ mb1 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil +
 
 ## MATCHED DATASET TO BE USED FOR THE DIFFERENCE IN DIFFERENCE (DID) ANALYSIS 
 
-matched <- rbind(pcdata[m1$index.treated,],pcdata[m1$index.control,]) # this is the matched dataset
+matched <- rbind(cfm_pa_data_90m_no_na[m1$index.treated,],cfm_pa_data_90m_no_na[m1$index.control,]) # this is the matched dataset
 wght <- c(m1$weights,m1$weights) # weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
 
 #write to CSV (Ranaivo says not to bother)
-write.csv(matched,'mahalanobis_matched.csv')
-write.csv(wght,'mahalanobis_wght.csv')
+write_csv(matched, 'outputs/mahalanobis_matched.csv')
+write.csv(wght,'outputs/mahalanobis_wght.csv')
 
-### GENETIC MATCHING ###  (COMMENTED OUT FOR NOW, TAKES A FULL DAY TO RUN)
+
+
+### GENETIC MATCHING ###  (TAKES >63 HRS TO RUN)
+
+library(rgenoud)
 
 ## SPECIFYING THE MATCHING
-#gen1 <- GenMatch(Tr=Treat, X=covs, pop.size= 500, exact= Ex, replace=TRUE, ties= TRUE)
-#mgen1 <- Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE, exact=Ex, replace=TRUE, ties=TRUE, Weight.matrix= gen1)
+gen1 <- GenMatch(Tr=Treat, X=covs, pop.size= 500, exact= Ex, replace=TRUE, ties= TRUE) #took >63 hrs to run
+mgen1 <- Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE, exact=Ex, replace=TRUE, ties=TRUE, Weight.matrix= gen1)
 
 ## CHECK COVARIATE BALANCE
-#mb2 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + rice + agr + slope + pop05 + DVSP + veg,
-#                    match.out = mgen1, nboots = 500, data=pcdata) 
+mb2 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + precip + slope + pop00 + DVSP + veg,
+                    match.out = mgen1, nboots = 500, data=cfm_pa_data_90m_no_na) 
 
 ## MATCHED DATASET TO BE USED FOR THE DIFFERENCE IN DIFFERENCE (DID) ANALYSIS 
 
-#gen.matched <- rbind(pcdata[mgen1$index.treated,],pcdata[mgen1$index.control,]) # this is the matched dataset
-#gen.wght <- c(mgen1$weights,mgen1$weights)# weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
+gen.matched <- rbind(cfm_pa_data_90m_no_na[mgen1$index.treated,],cfm_pa_data_90m_no_na[mgen1$index.control,]) # this is the matched dataset
+gen.wght <- c(mgen1$weights,mgen1$weights)# weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
 
 #write to CSV (Ranaivo says not to bother)
-write.csv(gen.matched,'genetic_matched.csv')
-write.csv(gen.wght,'genetic_wght.csv')
+write.csv(gen.matched,'outputs/genetic_matched.csv')
+write.csv(gen.wght,'outputs/genetic_wght.csv')
 
 
 
