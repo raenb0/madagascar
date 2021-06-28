@@ -225,38 +225,38 @@ communes <- read_sf("data/covariates/communes_UTM.shp")
 # create templates at different resolutions ------------------------------------------------
 # https://github.com/mstrimas/natcap/blob/master/02_planning-units.R
 
-# 1 km template
+# 90m template
 
-template_1km <- raster(xmn = 298440, xmx = 1100820, ymn = 7155900, ymx = 8682420, crs = "+proj=utm +zone=38 +south +datum=WGS84 +units=m +no_defs", resolution = 1000) #vals=0, template = for90
+template_90m <- raster(xmn = 298440, xmx = 1100820, ymn = 7155900, ymx = 8682420, crs = "+proj=utm +zone=38 +south +datum=WGS84 +units=m +no_defs", resolution = 90) #vals=0, template = for90
 
-# 10 km template
+# 300m template
 
-template_10km <- raster(xmn = 298440, xmx = 1100820, ymn = 7155900, ymx = 8682420, crs = "+proj=utm +zone=38 +south +datum=WGS84 +units=m +no_defs", resolution = 10000)
+template_300m <- raster(xmn = 298440, xmx = 1100820, ymn = 7155900, ymx = 8682420, crs = "+proj=utm +zone=38 +south +datum=WGS84 +units=m +no_defs", resolution = 300)
 
 
 # re-sample (warp) all rasters to the same extent and resolution ----------
 
-# Code from Matt S-M
+# Code from Matt S-M, revised to 90m and 300m from 1km and 10km
 
 # just grab a single layer to use to create templates
-template_1km <- raster("data/forest/for1990.tif") %>% 
+template_90m <- raster("data/forest/for1990.tif") %>% 
   # this removes all the values from the raster
   # just keeps the extent, resolution, and projection
   raster()
 # change the resolution
-res(template_1km) <- 1000
+res(template_90m) <- 90
 
 # now reproject changing resolution using gdal
-e <- extent(template_1km)
-crs <- projection(template_1km)
+e <- extent(template_90m)
+crs <- projection(template_90m)
 
 # this is your gdalwarp command
 cmd <- str_glue("gdalwarp -tr 1000 1000 -te {e@xmin} {e@ymin} {e@xmax} {e@ymax} ",
-                "-t_srs '{projection(template_1km)}' ",
+                "-t_srs '{projection(template_90m)}' ",
                 # aggregate using the average, other options available here
                 # https://gdal.org/programs/gdalwarp.html
                 "-r average ",
-                "forest/for1990.tif for1990_1km.tif")
+                "forest/for1990.tif for1990_90m.tif")
 
 # run this at the command line directly
 print(cmd)
@@ -264,9 +264,9 @@ print(cmd)
 # or run the command using r with
 system(cmd)
 
-# you can then aggregate to your 10km resolution option with
-for1990_1km <- raster("for1990_1km.tif")
-for1990_10km <- aggregate(r1km, fact = 10, fun = mean, filename = "forest1990_10km.tif")
+# you can then aggregate to your 300m resolution option with
+for1990_90m <- raster("for1990_90m.tif")
+for1990_300m <- aggregate(r30m, fact = 10, fun = mean, filename = "forest1990_300m.tif")
 
 
 
