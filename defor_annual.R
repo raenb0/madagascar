@@ -19,74 +19,87 @@ setwd("C:/Users/raenb/Documents/GitHub/madagascar") #new data subfolder
 
 # Load forest, Community Forest Management (CFM) forest, Protected Area (PA) forest, population data  -----------------------------------
 
+# Periodic data (1990, 2000, 2005, 2010, 2014) -----------------------------------------
+
 # total forest area in each time period (resolution: 30 x 30)
 
-for90 <- raster("data/forest/for1990.tif")
-for00 <- raster("data/forest/for2000.tif")
-for05 <- raster("data/forest/for2005.tif")
-for10 <- raster("data/forest/for2010.tif")
-for14 <- raster("data/forest/for2014.tif")
+# for90 <- raster("data/forest/for1990.tif")
+# for00 <- raster("data/forest/for2000.tif")
+# for05 <- raster("data/forest/for2005.tif")
+# for10 <- raster("data/forest/for2010.tif")
+# for14 <- raster("data/forest/for2014.tif")
 
 # repeat but using a raster stack instead of individual rasters
 
-forest_stack <- list.files("data/forest/", pattern = "*.tif$", full.names = TRUE) %>%
+#forest_stack <- list.files("data/forest/", pattern = "*.tif$", full.names = TRUE) %>%
+#  stack()
+
+# Annual data (2000-2017) (resolution: 90 x 90)--------------------------------
+
+forest_90m_stack <- list.files("data/forest_annual_90m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
 # forest masked to CFM areas in each time period (resolution: 30 x 30)
 
-cfm_for90 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for90.tif") #note I left out pre-05 from object names
-cfm_for00 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for00.tif")
-cfm_for05 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for05.tif")
-cfm_for10 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for10.tif")
-cfm_for14 <- raster("data/cfm_pre05_forest_utm/cfm_p05_for14.tif")
+# cfm_for90 <- raster("data/cfm_forest_30m/cfm_p05_for90.tif") #note I left out pre-05 from object names
+# cfm_for00 <- raster("data/cfm_forest_30m/cfm_p05_for00.tif")
+# cfm_for05 <- raster("data/cfm_forest_30m/cfm_p05_for05.tif")
+# cfm_for10 <- raster("data/cfm_forest_30m/cfm_p05_for10.tif")
+# cfm_for14 <- raster("data/cfm_forest_30m/cfm_p05_for14.tif")
 
-# repeat using a raster stack
-cfm_p05_for_stack <- list.files("data/cfm_pre05_forest_utm/", pattern = "*.tif$", full.names = TRUE) %>%
+# forest masked to CFM areas in each time period (resolution: 90 x 90)
+
+cfm_forest_stack_90m <- list.files("data/cfm_forest_90m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
 # forest masked to PAs in each time period (resolution: 30 x 30)
 
-pa_for90 <- raster("data/pa_forest/PA_for90.tif")
-pa_for00 <- raster("data/pa_forest/PA_for00.tif")
-pa_for05 <- raster("data/pa_forest/PA_for05.tif")
-pa_for10 <- raster("data/pa_forest/PA_for10.tif")
-pa_for14 <- raster("data/pa_forest/PA_for14.tif")
+# pa_for90 <- raster("data/pa_forest_30m/PA_for90.tif")
+# pa_for00 <- raster("data/pa_forest_30m/PA_for00.tif")
+# pa_for05 <- raster("data/pa_forest_30m/PA_for05.tif")
+# pa_for10 <- raster("data/pa_forest_30m/PA_for10.tif")
+# pa_for14 <- raster("data/pa_forest_30m/PA_for14.tif")
 
 # repeat using a raster stack
-pa_for_stack <- list.files("data/pa_forest/", pattern = "*.tif$", full.names = TRUE) %>%
+# pa_for_stack <- list.files("data/pa_forest_30m/", pattern = "*.tif$", full.names = TRUE) %>%
+#   stack()
+
+# forest masked to PAs in each time period (resolution: 90 x 90)
+
+pa_forest_stack_90m <- list.files("data/pa_forest_90m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
 # population in each time period (resolution: 919.4886, 919.4886 so needs to be resampled)
 
-pop00 <- raster("data/covariates/lspop2000_UTM.tif")
-pop05 <- raster("data/covariates/lspop2005_UTM.tif")
-pop10 <- raster("data/covariates/lspop2010_UTM.tif")
-pop14 <- raster("data/covariates/lspop2014_UTM.tif")
+# pop00 <- raster("data/covariates/lspop2000_UTM.tif")
+# pop05 <- raster("data/covariates/lspop2005_UTM.tif")
+# pop10 <- raster("data/covariates/lspop2010_UTM.tif")
+# pop14 <- raster("data/covariates/lspop2014_UTM.tif")
 
 #re-project population rasters to get extents to be identical to create a raster stack 
-pop05 <- projectRaster(from=pop05, to = pop00)
-pop10 <- projectRaster(from=pop10, to = pop00)
-pop14 <- projectRaster(from=pop14, to = pop00)
+# pop05 <- projectRaster(from=pop05, to = pop00)
+# pop10 <- projectRaster(from=pop10, to = pop00)
+# pop14 <- projectRaster(from=pop14, to = pop00)
 
 # create a raster stack
-pop_stack <- stack(c(pop00, pop05, pop10, pop14))
+#pop_stack <- stack(c(pop00, pop05, pop10, pop14))
 
 # check raster attributes -----------------------------------------------
 
-for90
+#for90
 #ncell = 1,360,943,464
 #resolution = 30, 30
 # extent     : 298440, 1100820, 7155900, 8682420  (xmin, xmax, ymin, ymax)
 
-cfm_for90
+#cfm_for90
 #ncell = 1,128,032,256
 #resolution = 30, 30
 #values: 0, 255 (min, max) ? this seems wrong, should be 0, 1
 
-NAvalue(cfm_for90)
+#NAvalue(cfm_for90)
 # -Inf #negative infinity is the NA value
 
-res(pop00)
+#res(pop00)
 # resolution of population data = 919.4886, 919.4886
 
 # plot rasters ------------------------------------------------------------
