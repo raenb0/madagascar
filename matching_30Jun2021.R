@@ -5,20 +5,15 @@ library(tidyr)
 
 setwd("C:/Users/raenb/Documents/GitHub/madagascar") # set working directory
 
-#read in 30m data
-
-cfm_30m_data <- read_csv("data/sample_points/cfm_for00_data_30m.csv") # read CFM 30m data
-pa_30m_data <- read_csv("data/sample_points/pa_for00_data_30m.csv") #, col_types = cols(vegtypemsk = col_factor())
-
 # read in 90m data
 
-cfm_90m_data <- read_csv("data/sample_points/cfm_for00_data_90m.csv")
-pa_90m_data <- read_csv("data/sample_points/pa_for00_data_90m.csv")
+cfm_90m_data <- read_csv("data/sample_points/cfm_for05_data_90m.csv") #note all columns read in as double, but some are categorical**
+pa_90m_data <- read_csv("data/sample_points/pa_for05_data_90m.csv")
 
 # read in 300m data
 
-cfm_300m_data <- read_csv("data/sample_points/cfm_for00_data_300m.csv") 
-pa_300m_data <- read_csv("data/sample_points/pa_for00_data_300m.csv")
+#cfm_300m_data <- read_csv("data/sample_points/cfm_for00_data_300m.csv") 
+#pa_300m_data <- read_csv("data/sample_points/pa_for00_data_300m.csv")
 
 # working with 90m data to start
 
@@ -26,19 +21,19 @@ pa_300m_data <- read_csv("data/sample_points/pa_for00_data_300m.csv")
 # and vice versa
 
 names(cfm_90m_data) #get variable names
-unique(cfm_90m_data$paidmsk) #get unique values of PA IDs - includes both 0 and NA, we want NA to be 0
-cfm_90m_data$paidmsk %>% replace_na(0) #replace NA values with 0
-unique(cfm_90m_data$paidmsk) #check if worked - no NA values anymore
+unique(cfm_90m_data$parstrid) #get unique values of PA IDs, includes NA
+#cfm_90m_data$parstrid %>% replace_na(0) #replace NA values with 0
+#unique(cfm_90m_data$parstrid) #check if worked, didn't work
+cfm_90m_data <- cfm_90m_data %>% 
+  mutate(parstrid = replace(as.numeric(parstrid), which(is.na(parstrid)), 0))
 
 cfm_90m_filter <- cfm_90m_data %>%
-  filter(cfm_90m_data$paidmsk<=0) #remove rows where PA ID is not zero
-unique(cfm_90m_filter$paidmsk) #check if worked - only 0 values returned, worked
+  filter(cfm_90m_data$parstrid<=0) #remove rows where PA ID is not zero
+unique(cfm_90m_filter$parstrid) #check if worked - only 0 values returned, worked
 
 #repeat for PA data
 names(pa_90m_data) #get variable names
 unique(pa_90m_data$cfmrstrid) #get unique values of CFM IDs - includes NA, we want NA to be 0
-#pa_90m_data$cfmrstrid %>% replace_na(0) #replace NA values with 0, doesn't work
-#unique(pa_90m_data$cfmrstrid) #check if worked - didn't work
 pa_90m_data <- pa_90m_data %>% 
   mutate(cfmrstrid = replace(as.numeric(cfmrstrid), which(is.na(cfmrstrid)), 0))
 unique(pa_90m_data$cfmrstrid) # WORKED!!
@@ -64,7 +59,7 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 
 cfm_pa_data_90m <- cfm_pa_data_90m %>% dplyr::select(-InclProb) #dropped first variable (InclProb) 
 
-cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m)
+cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values
 
 # We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
@@ -72,9 +67,9 @@ Treat <- cfm_pa_data_90m_no_na$CFM # Define treatment
 
 names(cfm_pa_data_90m_no_na)
 
-cfm_pa_data_90m_no_na <- rename(cfm_pa_data_90m_no_na, dist_cart = distcartutm, dist_road = distroadutm, dist_urb = disturbutm, dist_vil = distvilutm, DVSP = durationrst, elev = elevationut, pop00 = lspop2000UT, rice = paddythrutm, precip = precyrutm, slope = slopeutm, veg = vegtypemsk) #rename the covariates
+cfm_pa_data_90m_no_na <- rename(cfm_pa_data_90m_no_na, dist_cart = distcartutm, dist_road = distroadutm, dist_urb = disturbutm, dist_vil = distvilutm, DVSP = durationrst, elev = elevutmmskt, pop05 = lspop2005, rice = paddythrutm, precip = precyrutm, slope = slopeutm, veg = vegtyperstr, cfm_id = cfmrstrid, pa_id = parstrid) #rename the covariates
 
-cov.names <- c("dist_cart","dist_road","dist_urb","dist_vil","DVSP","elev","pop00","rice","precip","slope","veg") # Names of covariates used to match **NOTE alphabetical order, included population 2000
+cov.names <- c("dist_cart","dist_road","dist_urb","dist_vil","DVSP","elev","pop05","rice","precip","slope","veg") # Names of covariates used to match **NOTE alphabetical order, included population 2000
 
 
 covs <- cfm_pa_data_90m_no_na[cov.names] # Extract the covariates
