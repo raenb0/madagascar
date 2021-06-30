@@ -95,7 +95,7 @@ m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex,replace=TRUE, 
 
 names(covs)
 
-mb1 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + precip + slope + pop00 + DVSP + veg,
+mb1 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + precip + slope + pop05 + DVSP + veg,
                     match.out = m1, nboots = 500, data=cfm_pa_data_90m_no_na) 
 
 #Update: Ranaivo said to replace "covs" with the list of covariates we actually want to use to match on
@@ -107,9 +107,9 @@ mb1 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil +
 matched <- rbind(cfm_pa_data_90m_no_na[m1$index.treated,],cfm_pa_data_90m_no_na[m1$index.control,]) # this is the matched dataset
 wght <- c(m1$weights,m1$weights) # weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
 
-#write to CSV (Ranaivo says not to bother)
-write_csv(matched, 'outputs/mahalanobis_matched.csv')
-write.csv(wght,'outputs/mahalanobis_wght.csv')
+#write to CSV 
+write_csv(matched, 'outputs/mahalanobis_matched_30Jun2021.csv')
+write.csv(wght,'outputs/mahalanobis_wght_30Jun2021.csv')
 
 
 
