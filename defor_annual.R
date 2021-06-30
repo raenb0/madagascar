@@ -35,9 +35,10 @@ setwd("C:/Users/raenb/Documents/GitHub/madagascar") #new data subfolder
 #  stack()
 
 # Annual data (2000-2017) (resolution: 90 x 90)--------------------------------
+# shouldn't need full forest cover data for anything at this stage
 
-forest_90m_stack <- list.files("data/forest_annual_90m/", pattern = "*.tif$", full.names = TRUE) %>%
-  stack()
+# forest_90m_stack <- list.files("data/forest_annual_90m/", pattern = "*.tif$", full.names = TRUE) %>%
+#  stack()
 
 # forest masked to CFM areas in each time period (resolution: 30 x 30)
 
@@ -69,20 +70,56 @@ cfm_forest_stack_90m <- list.files("data/cfm_forest_90m/", pattern = "*.tif$", f
 pa_forest_stack_90m <- list.files("data/pa_forest_90m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
-# population in each time period (resolution: 919.4886, 919.4886 so needs to be resampled)
 
-# pop00 <- raster("data/covariates/lspop2000_UTM.tif")
-# pop05 <- raster("data/covariates/lspop2005_UTM.tif")
-# pop10 <- raster("data/covariates/lspop2010_UTM.tif")
-# pop14 <- raster("data/covariates/lspop2014_UTM.tif")
+# STOPPED HERE --------------------
+
+
+# population (resolution: 919.4886, 919.4886***)
+
+# annual population (resolution: 919.4886, 919.4886) #doesn't work, rasters are different extents
+#pop_stack <- list.files("data/population_annual/", pattern = "*.tif$", full.names = TRUE) %>%
+#   stack()
+
+pop00 <- raster("data/population_annual/lspop2000.tif")
+pop01 <- raster("data/population_annual/lspop2001.tif")
+pop02 <- raster("data/population_annual/lspop2002.tif")
+pop03 <- raster("data/population_annual/lspop2003.tif")
+pop04 <- raster("data/population_annual/lspop2004.tif")
+pop05 <- raster("data/population_annual/lspop2005.tif")
+pop06 <- raster("data/population_annual/lspop2006.tif")
+pop07 <- raster("data/population_annual/lspop2007.tif")
+pop08 <- raster("data/population_annual/lspop2008.tif")
+pop09 <- raster("data/population_annual/lspop2009.tif")
+pop10 <- raster("data/population_annual/lspop2010.tif")
+pop11 <- raster("data/population_annual/lspop2011.tif")
+pop12 <- raster("data/population_annual/lspop2012.tif")
+pop13 <- raster("data/population_annual/lspop2013.tif")
+pop14 <- raster("data/population_annual/lspop2014.tif")
+
+extent(pop00)
+extent(pop01)
+extent(pop05) #extents don't match
+
+res(pop00)
 
 #re-project population rasters to get extents to be identical to create a raster stack 
-# pop05 <- projectRaster(from=pop05, to = pop00)
-# pop10 <- projectRaster(from=pop10, to = pop00)
-# pop14 <- projectRaster(from=pop14, to = pop00)
+pop01 <- projectRaster(from=pop01, to = pop00)
+pop02 <- projectRaster(from=pop02, to = pop00)
+pop03 <- projectRaster(from=pop03, to = pop00)
+pop04 <- projectRaster(from=pop04, to = pop00)
+pop05 <- projectRaster(from=pop05, to = pop00)
+pop06 <- projectRaster(from=pop06, to = pop00)
+pop07 <- projectRaster(from=pop07, to = pop00)
+pop08 <- projectRaster(from=pop08, to = pop00)
+pop09 <- projectRaster(from=pop09, to = pop00)
+pop10 <- projectRaster(from=pop10, to = pop00)
+pop11 <- projectRaster(from=pop11, to = pop00)
+pop12 <- projectRaster(from=pop12, to = pop00)
+pop13 <- projectRaster(from=pop13, to = pop00)
+pop14 <- projectRaster(from=pop14, to = pop00)
 
 # create a raster stack
-#pop_stack <- stack(c(pop00, pop05, pop10, pop14))
+pop_stack <- stack(c(pop00, pop01, pop02,  pop03, pop04, pop05, pop06, pop07, pop08, pop09, pop10, pop11, pop12, pop13, pop14))
 
 # check raster attributes -----------------------------------------------
 
@@ -179,35 +216,71 @@ ggplot(data = defor_trends) +
 
 # load covariates -------------------------------------------------------
 
-# agricultural suitability (resolution 9198.335, 9198.335)
+# agricultural suitability (resolution 9198.335, 9198.335) #no longer using this data
 
-ag <- raster("data/covariates/agr_su_utm.tif")
+# ag <- raster("data/covariates/agr_su_utm.tif")
 
-#ag #check resolution, projection
+#res(ag) #check resolution
+
+# cfm_id (resolution 30, 30)
+
+cfm_id <- raster("data/covariates/cfm_id.tif")
+
+res(cfm_id) #check resolution
 
 # distance from cart tracks (resolution 91.8397, 91.8397)
 
 dist_cart <- raster("data/covariates/dist_cart_utm.tif")
 
+res(dist_cart)
+
 # distance from roads (resolution 91.8397, 91.8397)
 
 dist_road <- raster("data/covariates/dist_road_utm.tif")
+
+res(dist_road)
 
 # distance from urban areas (resolution 91.8397, 91.8397)
 
 dist_urban <- raster("data/covariates/dist_urb_utm.tif")
 
+res(dist_urban)
+
 # distance from villages (resolution 91.8397, 91.8397)
 
 dist_vil <- raster("data/covariates/dist_vil_utm.tif")
+
+res(dist_vil)
+
+# elevation (resolution 91.8397, 91.8397)
+
+elev <- raster("data/covariates/elev_utm.tif")
+
+res(elev)
+
+# protected area ID (resolution 30, 30)
+
+pa_id <- raster("data/covariates/pa_id.tif")
+
+res(pa_id)
 
 # suitability for rice (0 is unsuitable, 1 is suitable) (resolution 91.8397, 91.8397)
 
 rice <- raster("data/covariates/paddy_thr_utm.tif")
 
+res(rice)
+
+# annual avg precipitation (resolution 924.8285, 924.8285**)
+
+precip <- raster("data/covariates/prec_yr_utm.tif")
+
+res(precip)
+
 # slope (resolution 91.8397, 91.8397)
 
 slope <- raster("data/covariates/slope_utm.tif")
+
+res(slope)
 
 
 
@@ -221,17 +294,17 @@ veg_types <- read_sf("data/covariates/veg_types_UTM.shp")
 
 protected_areas <- read_sf("data/cfm_pa/MNP_PA_UTM.shp")
 
-# CFM areas (all)
+# CFM areas (all) #not planning to include this
 
-cfm_all <- read_sf("data/cfm_pa/CFM_all_UTM.shp") #there's also CFM_all_fix.shp if this one has issues
+#cfm_all <- read_sf("data/cfm_pa/CFM_all_UTM.shp") #there's also CFM_all_fix.shp if this one has issues
 
 # CFM areas (pre-2005)
 
 cfm_pre05 <- read_sf("data/cfm_pa/CFM_pre05_UTM.shp")
 
-# communes 
+# communes #Ranaivo said not to include this
 
-communes <- read_sf("data/covariates/communes_UTM.shp")
+# communes <- read_sf("data/covariates/communes_UTM.shp")
 
 
 
