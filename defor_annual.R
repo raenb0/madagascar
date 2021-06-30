@@ -40,15 +40,15 @@ setwd("C:/Users/raenb/Documents/GitHub/madagascar") #new data subfolder
 # forest_90m_stack <- list.files("data/forest_annual_90m/", pattern = "*.tif$", full.names = TRUE) %>%
 #  stack()
 
-# forest masked to CFM areas in each time period (resolution: 30 x 30)
+# forest masked to pre-2005 CFM areas (resolution: 90 x 90)
 
-# cfm_for90 <- raster("data/cfm_forest_30m/cfm_p05_for90.tif") #note I left out pre-05 from object names
-# cfm_for00 <- raster("data/cfm_forest_30m/cfm_p05_for00.tif")
-# cfm_for05 <- raster("data/cfm_forest_30m/cfm_p05_for05.tif")
-# cfm_for10 <- raster("data/cfm_forest_30m/cfm_p05_for10.tif")
-# cfm_for14 <- raster("data/cfm_forest_30m/cfm_p05_for14.tif")
+cfm_for90_90m <- raster("data/cfm_forest_90m/cfm_for90_90m.tif") #note I left out pre-05 from object names
+cfm_for00_90m <- raster("data/cfm_forest_90m/cfm_for00_90m.tif")
+cfm_for05_90m <- raster("data/cfm_forest_90m/cfm_for05_90m.tif")
+cfm_for10_90m <- raster("data/cfm_forest_90m/cfm_for10_90m.tif")
+cfm_for14_90m <- raster("data/cfm_forest_90m/cfm_for14_90m.tif")
 
-# forest masked to CFM areas in each time period (resolution: 90 x 90)
+# as raster stack
 
 cfm_forest_stack_90m <- list.files("data/cfm_forest_90m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
@@ -67,11 +67,16 @@ cfm_forest_stack_90m <- list.files("data/cfm_forest_90m/", pattern = "*.tif$", f
 
 # forest masked to PAs in each time period (resolution: 90 x 90)
 
+pa_for90_90m <- raster("data/pa_forest_90m/PA_for90_90m.tif")
+pa_for00_90m <- raster("data/pa_forest_90m/PA_for00_90m.tif")
+pa_for05_90m <- raster("data/pa_forest_90m/PA_for05_90m.tif")
+pa_for10_90m <- raster("data/pa_forest_90m/PA_for10_90m.tif")
+pa_for14_90m <- raster("data/pa_forest_90m/PA_for14_90m.tif")
+
+# as a stack
+
 pa_forest_stack_90m <- list.files("data/pa_forest_90m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
-
-
-# STOPPED HERE --------------------
 
 
 # population (resolution: 919.4886, 919.4886***)
@@ -282,13 +287,19 @@ slope <- raster("data/covariates/slope_utm.tif")
 
 res(slope)
 
+# vegetation type (resolution 30, 30 based on polygon)
+
+veg_type <- raster("data/covariates/veg_type_rstr.tif")
+
+res(veg_type)
+
 
 
 # load polygons for cluster analysis ---------------
 
-# vegetation types
+# vegetation types #no longer needed, already rasterized and added above
 
-veg_types <- read_sf("data/covariates/veg_types_UTM.shp") 
+# veg_types <- read_sf("data/covariates/veg_types_UTM.shp") 
 
 # protected areas
 
@@ -356,53 +367,7 @@ for1990_300m <- aggregate(for90, fact = 10, fun = mean, filename = "forest1990_3
 
 
 
-# create a random sample of grid cells ------------------------------------
-
-# Rachel's attempt, using example from https://gis.stackexchange.com/questions/291446/generating-random-points-inside-raster-boundary-using-r
-
-# which cells are not NA? 
-notna <- which(!is.na(values(cfm_for90)))
-
-# grab 2000 cell index numbers at random
-samp <- base::sample(notna, 2000, replace = FALSE)
-
-# and their values
-sampdata_cfm_for90 <- cfm_for90[samp]
-sampdata_cfm_for00 <- cfm_for00[samp]
-sampdata_cfm_for05 <- cfm_for05[samp]
-sampdata_cfm_for10 <- cfm_for10[samp]
-sampdata_cfm_for14 <- cfm_for14[samp]
-
-# and their location coordinates
-samplocs <- xyFromCell(cfm_for90, samp)
-
-# convert to data frames
-samp_cfm_for90 <- as.data.frame(cbind(samplocs, samp, sampdata_cfm_for90))
-names(samp_cfm_for90) <- c('x', 'y', 'index', 'value')
-
-samp_cfm_for00 <- as.data.frame(cbind(samplocs, samp, sampdata_cfm_for00))
-names(samp_cfm_for00) <- c('x', 'y', 'index', 'value')
-
-samp_cfm_for05 <- as.data.frame(cbind(samplocs, samp, sampdata_cfm_for05))
-names(samp_cfm_for05) <- c('x', 'y', 'index', 'value')
-
-samp_cfm_for10 <- as.data.frame(cbind(samplocs, samp, sampdata_cfm_for10))
-names(samp_cfm_for10) <- c('x', 'y', 'index', 'value')
-
-samp_cfm_for14 <- as.data.frame(cbind(samplocs, samp, sampdata_cfm_for14))
-names(samp_cfm_for14) <- c('x', 'y', 'index', 'value')
-
-# and optionally, a spatial object, in sf or sp
-library(sp)
-samp_sp <- samp_cfm_for90
-coordinates(samp_sp) <- ~x + y
-crs(samp_sp) <- CRS('+init=epsg:4326')
-
-library(sf)
-samp_sf <- st_as_sf(as.data.frame(samp_cfm_for90), coords = c('x', 'y'), crs = 4326)
-
-
-# Matt's code for sampling ------------------------------------------------
+# create a random sample of grid cells (Matt's code) ------------------------------------
 
 #In terms of creating a random sample of cells, you can stack() all the layers once they're all aligned and in the 
 # same projection. Make sure the layers are named sensibly in the stack, the names come from the filenames, so just 
@@ -411,13 +376,18 @@ samp_sf <- st_as_sf(as.data.frame(samp_cfm_for90), coords = c('x', 'y'), crs = 4
 library(raster)
 library(sf)
 
-forest_annual_stack <- list.files("data/forest_annual_30m/", pattern = "*.tif$", full.names = TRUE) %>%
-  stack()
+#forest_annual_stack <- list.files("data/forest_annual_30m/", pattern = "*.tif$", full.names = TRUE) %>%
+#  stack()
 
-sample <- sampleRandom(forest_annual_stack, size = 100, cells = TRUE, sp = TRUE) %>% # I assume "s" is the stack?
+cfm_sample <- sampleRandom(cfm_for05_90m, size = 100, cells = TRUE, sp = TRUE) %>% #returns values < 1, I only want grid cells with values of 1
+  st_as_sf() #also note this only samples the CFM for05 data, not all the raster data
+
+write_sf(cfm_sample, "outputs/cfm_for05_sample_90m.gpkg")
+
+pa_sample <- sampleRandom(pa_for05_90m, size = 100, cells = TRUE, sp = TRUE) %>% #returns values < 1, I only want grid cells with values of 1
   st_as_sf()
 
-write_sf(sample, "sampled-cells_30m.gpkg")
+write_sf(pa_sample, "outputs/pa_for05_sample_90m.gpkg")
 
 # This will create a GeoPackage storing the sampled cells in a spatial format. If you don't care about the spatial 
 # component, you could convert to a data frame with st_drop_geometry(sample).
