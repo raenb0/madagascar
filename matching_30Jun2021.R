@@ -107,7 +107,7 @@ mb1 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil +
 matched <- rbind(cfm_pa_data_90m_no_na[m1$index.treated,],cfm_pa_data_90m_no_na[m1$index.control,]) # this is the matched dataset
 wght <- c(m1$weights,m1$weights) # weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
 
-#write to CSV 
+#write to CSV *update date!
 write_csv(matched, 'outputs/mahalanobis_matched_30Jun2021.csv')
 write.csv(wght,'outputs/mahalanobis_wght_30Jun2021.csv')
 
