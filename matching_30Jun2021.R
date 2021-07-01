@@ -67,15 +67,15 @@ Treat <- cfm_pa_data_90m_no_na$CFM # Define treatment
 
 names(cfm_pa_data_90m_no_na)
 
-cfm_pa_data_90m_no_na <- rename(cfm_pa_data_90m_no_na, dist_cart = distcartutm, dist_road = distroadutm, dist_urb = disturbutm, dist_vil = distvilutm, DVSP = durationrst, elev = elevutmmskt, pop05 = lspop2005, rice = paddythrutm, precip = precyrutm, slope = slopeutm, veg = vegtyperstr, cfm_id = cfmrstrid, pa_id = parstrid) #rename the covariates
+cfm_pa_data_90m_no_na <- rename(cfm_pa_data_90m_no_na, dist_cart = distcartutm, dist_road = distroadutm, dist_urb = disturbutm, dist_vil = distvilutm, DVSP = durationrst, elev = elevutmmskt, pop05 = lspop2005, rice = paddythrutm, precip = precyrutm, slope = slopeutm, veg = vegtyperstr, cfm_id = cfmrstrid, pa_id = parstrid, dist_edge = distedge90m) #rename the covariates
 
-cov.names <- c("dist_cart","dist_road","dist_urb","dist_vil","DVSP","elev","pop05","rice","precip","slope","veg") # Names of covariates used to match **NOTE alphabetical order, included population 2000
+cov.names <- c("dist_cart", "dist_edge", "dist_road","dist_urb","dist_vil","DVSP","elev","pop05","rice","precip","slope","veg") # Names of covariates used to match **NOTE alphabetical order, included population 2005
 
 
 covs <- cfm_pa_data_90m_no_na[cov.names] # Extract the covariates
 
 Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", 
-        "FALSE", "FALSE", "TRUE") # Logical vector to allow EXACT matching to be done for the "veg" variable (i.e., matching operates within each type of vegetation)
+        "FALSE", "FALSE", "FALSE", "TRUE") # Logical vector to allow EXACT matching to be done for the "veg" variable (i.e., matching operates within each type of vegetation)
 
 
 ### MAHALANOBIS DISTANCE MATCHING ###
