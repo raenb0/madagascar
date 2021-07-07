@@ -51,23 +51,23 @@ cfm_90m_data <- rename(cfm_90m_data,
                        for2016 = for201690m,
                        for2017 = for201790m,
                        pop00 = lspop2000,
-                       pop01 = lspop2000,
-                       pop02 = lspop2000,
-                       pop03 = lspop2000,
-                       pop04 = lspop2000,
+                       pop01 = lspop2001,
+                       pop02 = lspop2002,
+                       pop03 = lspop2003,
+                       pop04 = lspop2004,
                        pop05 = lspop2005,
-                       pop06 = lspop2000,
-                       pop07 = lspop2000,
-                       pop08 = lspop2000,
-                       pop09 = lspop2000,
-                       pop10 = lspop2000,
-                       pop11 = lspop2000,
-                       pop12 = lspop2000,
-                       pop13 = lspop2000,
-                       pop14 = lspop2000,
-                       pop15 = lspop2000,
-                       pop16 = lspop2000,
-                       pop17 = lspop2000,
+                       pop06 = lspop2006,
+                       pop07 = lspop2007,
+                       pop08 = lspop2008,
+                       pop09 = lspop2009,
+                       pop10 = lspop2010,
+                       pop11 = lspop2011,
+                       pop12 = lspop2012,
+                       pop13 = lspop2013,
+                       pop14 = lspop2014,
+                       pop15 = lspop2015,
+                       pop16 = lspop2016,
+                       pop17 = lspop2017,
                        rice = paddythrutm,
                        precip = precyrutm,
                        slope = slopeutm,
@@ -75,6 +75,11 @@ cfm_90m_data <- rename(cfm_90m_data,
                        cfm_id = cfmrstrid,
                        pa_id = parstrid,
                        dist_edge = distedge90m) 
+
+
+names(cfm_90m_data) #check if renaming worked
+
+# filter out sample points that are in overlapping PA and CFM areas
 
 unique(cfm_90m_data$pa_id) #get unique values of PA IDs, includes NA
 cfm_90m_data <- cfm_90m_data %>% 
@@ -117,23 +122,23 @@ pa_90m_data <- rename(pa_90m_data,
                        for2016 = for201690m,
                        for2017 = for201790m,
                        pop00 = lspop2000,
-                       pop01 = lspop2000,
-                       pop02 = lspop2000,
-                       pop03 = lspop2000,
-                       pop04 = lspop2000,
+                       pop01 = lspop2001,
+                       pop02 = lspop2002,
+                       pop03 = lspop2003,
+                       pop04 = lspop2004,
                        pop05 = lspop2005,
-                       pop06 = lspop2000,
-                       pop07 = lspop2000,
-                       pop08 = lspop2000,
-                       pop09 = lspop2000,
-                       pop10 = lspop2000,
-                       pop11 = lspop2000,
-                       pop12 = lspop2000,
-                       pop13 = lspop2000,
-                       pop14 = lspop2000,
-                       pop15 = lspop2000,
-                       pop16 = lspop2000,
-                       pop17 = lspop2000,
+                       pop06 = lspop2006,
+                       pop07 = lspop2007,
+                       pop08 = lspop2008,
+                       pop09 = lspop2009,
+                       pop10 = lspop2010,
+                       pop11 = lspop2011,
+                       pop12 = lspop2012,
+                       pop13 = lspop2013,
+                       pop14 = lspop2014,
+                       pop15 = lspop2015,
+                       pop16 = lspop2016,
+                       pop17 = lspop2017,
                        rice = paddythrutm,
                        precip = precyrutm,
                        slope = slopeutm,
@@ -141,6 +146,10 @@ pa_90m_data <- rename(pa_90m_data,
                        cfm_id = cfmrstrid,
                        pa_id = parstrid,
                        dist_edge = distedge90m) 
+
+names(pa_90m_data) #check if renaming worked
+
+# filter out sample points that are in overlapping PA and CFM areas
 
 unique(pa_90m_data$cfm_id) #get unique values of CFM IDs - includes NA, we want NA to be 0
 pa_90m_data <- pa_90m_data %>% 
@@ -248,8 +257,8 @@ write.csv(wght,'outputs/mahalanobis_wght_7Jul2021.csv') #note this outputs a tab
 library(tidyverse)
 library(dplyr)
 
-matched <- read_csv('outputs/mahalanobis_matched_1Jul2021.csv')
-wght <- read_csv('outputs/mahalanobis_wght_1Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_7Jul2021.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_7Jul2021.csv')
 
 #add weights to matched dataset
 
@@ -260,8 +269,8 @@ w.matched <- data.frame(matched, wght)
 #and a 1 if there was deforestation from 2005 and 2010 
 #(I know the order seems wrong, but this way we avoid negative numbers)
 
-w.matched$defor.1 <- w.matched$for200590m-w.matched$for201090m
-w.matched$defor.2 <- w.matched$for201090m-w.matched$for201490m
+w.matched$defor.1 <- w.matched$for2005-w.matched$for2010
+w.matched$defor.2 <- w.matched$for2010-w.matched$for2014
 
 #rename population variables 
 #Ranaivo says: It is better to use the pop at the beginning of the periods 
@@ -334,16 +343,16 @@ write_csv(w.matched.reorg,'outputs/w.matched.reorg.csv')
 
 
 ##TRY OUT PGLM - didn't work
-#library(pglm)
+library(pglm)
 
-#pglm(defor ~ time + time*CFM + pop,
-#     data = w.matched.reorg,
-#     effect = "twoways", #specify that we control for time period
-#     model = "within", #change within same unit over time
-#     family = binomial('logit'), #is this right? 
-#     index = c("UID", "time"),
-#     start = NULL
-#     )
+pglm(defor ~ time + time*CFM + pop,
+     data = w.matched.reorg,
+     effect = "twoways", #specify that we control for time period
+     model = "within", #change within same unit over time
+     family = binomial('logit'), #is this right?
+     index = c("UID", "time"),
+     start = NULL
+     )
 
 #(Trying to get pglm to work)
 #tried family = binomial('logit') and got below error
