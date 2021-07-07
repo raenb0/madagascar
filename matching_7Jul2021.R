@@ -3,6 +3,9 @@ library(dplyr)
 library(Matching)
 library(tidyr)
 
+
+# Load data ---------------------------------------------------------------
+
 setwd("C:/Users/raenb/Documents/GitHub/madagascar") # set working directory
 
 # read in 90m data
@@ -18,12 +21,12 @@ pa_90m_data <- read_csv("data/sample_points/pa_for05_data_90m.csv")
 
 # working with 90m data to start
 
-# remove CFM data point if PA ID has a value (those are sample points in areas that overlap both PAs and CFM areas)
-# and vice versa
+
+# Data wrangling --------------------------------------------------------
+
+# Rename variables
 
 names(cfm_90m_data) #get variable names
-
-#rename the variables
 
 cfm_90m_data <- rename(cfm_90m_data,
                        dist_cart = distcartutm,
@@ -79,7 +82,65 @@ cfm_90m_data <- rename(cfm_90m_data,
 
 names(cfm_90m_data) #check if renaming worked
 
-# filter out sample points that are in overlapping PA and CFM areas
+# repeat for PA data
+
+names(pa_90m_data) #get variable names
+
+pa_90m_data <- rename(pa_90m_data,
+                      dist_cart = distcartutm,
+                      dist_road = distroadutm,
+                      dist_urb = disturbutm,
+                      dist_vil = distvilutm,
+                      DVSP = durationrst,
+                      elev = elevutmmskt,
+                      for2000 = for200090m,
+                      for2001 = for200190m,
+                      for2002 = for200290m,
+                      for2003 = for200390m,
+                      for2004 = for200490m,
+                      for2005 = for200590m,
+                      for2006 = for200690m,
+                      for2007 = for200790m,
+                      for2008 = for200890m,
+                      for2009 = for200990m,
+                      for2010 = for201090m,
+                      for2011 = for201190m,
+                      for2012 = for201290m,
+                      for2013 = for201390m,
+                      for2014 = for201490m,
+                      for2015 = for201590m,
+                      for2016 = for201690m,
+                      for2017 = for201790m,
+                      pop00 = lspop2000,
+                      pop01 = lspop2001,
+                      pop02 = lspop2002,
+                      pop03 = lspop2003,
+                      pop04 = lspop2004,
+                      pop05 = lspop2005,
+                      pop06 = lspop2006,
+                      pop07 = lspop2007,
+                      pop08 = lspop2008,
+                      pop09 = lspop2009,
+                      pop10 = lspop2010,
+                      pop11 = lspop2011,
+                      pop12 = lspop2012,
+                      pop13 = lspop2013,
+                      pop14 = lspop2014,
+                      pop15 = lspop2015,
+                      pop16 = lspop2016,
+                      pop17 = lspop2017,
+                      rice = paddythrutm,
+                      precip = precyrutm,
+                      slope = slopeutm,
+                      veg = vegtyperstr,
+                      cfm_id = cfmrstrid,
+                      pa_id = parstrid,
+                      dist_edge = distedge90m) 
+
+names(pa_90m_data) #check if renaming worked
+
+
+# Filter out sample points that are in overlapping PA and CFM areas
 
 unique(cfm_90m_data$pa_id) #get unique values of PA IDs, includes NA
 cfm_90m_data <- cfm_90m_data %>% 
@@ -92,65 +153,6 @@ unique(cfm_90m_filter$pa_id) #check if worked - only 0 values returned, worked
 
 #repeat for PA data
 
-names(pa_90m_data) #get variable names
-
-#rename the variables
-
-pa_90m_data <- rename(pa_90m_data,
-                       dist_cart = distcartutm,
-                       dist_road = distroadutm,
-                       dist_urb = disturbutm,
-                       dist_vil = distvilutm,
-                       DVSP = durationrst,
-                       elev = elevutmmskt,
-                       for2000 = for200090m,
-                       for2001 = for200190m,
-                       for2002 = for200290m,
-                       for2003 = for200390m,
-                       for2004 = for200490m,
-                       for2005 = for200590m,
-                       for2006 = for200690m,
-                       for2007 = for200790m,
-                       for2008 = for200890m,
-                       for2009 = for200990m,
-                       for2010 = for201090m,
-                       for2011 = for201190m,
-                       for2012 = for201290m,
-                       for2013 = for201390m,
-                       for2014 = for201490m,
-                       for2015 = for201590m,
-                       for2016 = for201690m,
-                       for2017 = for201790m,
-                       pop00 = lspop2000,
-                       pop01 = lspop2001,
-                       pop02 = lspop2002,
-                       pop03 = lspop2003,
-                       pop04 = lspop2004,
-                       pop05 = lspop2005,
-                       pop06 = lspop2006,
-                       pop07 = lspop2007,
-                       pop08 = lspop2008,
-                       pop09 = lspop2009,
-                       pop10 = lspop2010,
-                       pop11 = lspop2011,
-                       pop12 = lspop2012,
-                       pop13 = lspop2013,
-                       pop14 = lspop2014,
-                       pop15 = lspop2015,
-                       pop16 = lspop2016,
-                       pop17 = lspop2017,
-                       rice = paddythrutm,
-                       precip = precyrutm,
-                       slope = slopeutm,
-                       veg = vegtyperstr,
-                       cfm_id = cfmrstrid,
-                       pa_id = parstrid,
-                       dist_edge = distedge90m) 
-
-names(pa_90m_data) #check if renaming worked
-
-# filter out sample points that are in overlapping PA and CFM areas
-
 unique(pa_90m_data$cfm_id) #get unique values of CFM IDs - includes NA, we want NA to be 0
 pa_90m_data <- pa_90m_data %>% 
   mutate(cfm_id = replace(as.numeric(cfm_id), which(is.na(cfm_id)), 0))
@@ -159,6 +161,7 @@ unique(pa_90m_data$cfm_id) # WORKED!!
 pa_90m_filter <- pa_90m_data %>%
   filter(cfm_id<=0) #remove rows where PA ID is not NA
 unique(pa_90m_filter$cfm_id) #check if worked - only 0 values returned, worked
+
 
 # add columns for CFM (0 or 1) and PA (0 or 1)
 
@@ -179,20 +182,25 @@ cfm_pa_data_90m <- cfm_pa_data_90m %>% dplyr::select(-InclProb) #dropped first v
 
 cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values
 
-# We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
-Treat <- cfm_pa_data_90m_no_na$CFM # Define treatment
+# Define treatment
+# Ranaivo says: We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
+
+Treat <- cfm_pa_data_90m_no_na$CFM 
+
+# Define covariates
 
 cov.names <- c("dist_cart", "dist_edge", "dist_road","dist_urb","dist_vil","DVSP","elev","pop05","rice","precip","slope","veg") # Names of covariates used to match **NOTE alphabetical order, included population 2005
 
+# Extract the covariates
 
-covs <- cfm_pa_data_90m_no_na[cov.names] # Extract the covariates
+covs <- cfm_pa_data_90m_no_na[cov.names]
 
 Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", 
         "FALSE", "FALSE", "FALSE", "TRUE") # Logical vector to allow EXACT matching to be done for the "veg" variable (i.e., matching operates within each type of vegetation)
 
 
-### MAHALANOBIS DISTANCE MATCHING ###
+### MAHALANOBIS DISTANCE MATCHING ### -------------------------------
 
 ## SPECIFYING THE MATCHING
 
@@ -222,12 +230,13 @@ matched <- rbind(cfm_pa_data_90m_no_na[m1$index.treated,],cfm_pa_data_90m_no_na[
 wght <- c(m1$weights,m1$weights) # weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
 
 #write to CSV *update date!
+
 write_csv(matched, 'outputs/mahalanobis_matched_7Jul2021.csv')
 write.csv(wght,'outputs/mahalanobis_wght_7Jul2021.csv') #note this outputs a table with only values of 1***
 
 
 
-### GENETIC MATCHING ###  (TAKES >63 HRS TO RUN)
+### GENETIC MATCHING ###  (TAKES >63 HRS TO RUN)-------------------------
 
 #library(rgenoud)
 
@@ -251,11 +260,12 @@ write.csv(wght,'outputs/mahalanobis_wght_7Jul2021.csv') #note this outputs a tab
 
 
 
-## REORGANIZE MAHALANOBIS MATCHED DATA FOR ANALYSIS
+## REORGANIZE MAHALANOBIS MATCHED DATA FOR ANALYSIS -----------------------
 
-#load tabular data if needed
 library(tidyverse)
 library(dplyr)
+
+#load tabular data if needed
 
 matched <- read_csv('outputs/mahalanobis_matched_7Jul2021.csv')  #update dates
 wght <- read_csv('outputs/mahalanobis_wght_7Jul2021.csv')
@@ -272,21 +282,24 @@ w.matched <- data.frame(matched, wght)
 w.matched$defor.1 <- w.matched$for2005-w.matched$for2010
 w.matched$defor.2 <- w.matched$for2010-w.matched$for2014
 
-#rename population variables 
+#add population variables 
 #Ranaivo says: It is better to use the pop at the beginning of the periods 
 #(i.e., in 2005 for period 1 and 2010 for period 2) than the difference
-#(we only need 2 time periods, but I renamed all three for clarity)
+#(we only need 2 time periods)
 
-names(w.matched)[names(w.matched) == "pop05"] <- "pop.1"
-names(w.matched)[names(w.matched) == "lspop2010"] <- "pop.2"
-names(w.matched)[names(w.matched) == "lspop2014"] <- "pop.3"
+w.matched$pop.1 <- w.matched$pop05
+w.matched$pop.2 <- w.matched$pop10
+
+#names(w.matched)[names(w.matched) == "pop05"] <- "pop.1"
+#names(w.matched)[names(w.matched) == "pop10"] <- "pop.2"
+#names(w.matched)[names(w.matched) == "pop14"] <- "pop.3"
 
 #Select desired variables, reorder columns
 
 names(w.matched)
 
-w.matched.subs <- w.matched %>% 
-  select(CFM, PA, cfm_id, pa_id, dist_cart, dist_edge, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg,  pop.1, pop.2, defor.1, defor.2)
+w.matched.subs <- w.matched %>%
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_edge, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg,  pop.1, pop.2, defor.1, defor.2)
 
 #subset data to split up PA and CFM data
 
@@ -319,16 +332,7 @@ View(CFM_data)
 w.matched_bind <- rbind(PA_data, CFM_data)
 View(w.matched_bind)
 
-#reorganize - something went wrong because pop is always 0 in time 2
-#w.matched.reorg <- reshape(w.matched_bind,
-#                           idvar = "UID",
-#                           direction="long", 
-#                           varying=c(pop=c(11,12), defor=c(16,17)),
-#                           v.names = c("pop", "defor"),
-#                           times = c("1", "2")
-#                           )
-
-#trying Ranaivo's simpler version (I added idvar="UID") - seems to work
+#reorganize
 w.matched.reorg <- reshape(w.matched_bind,
                             idvar = "UID",
                             direction = "long",
@@ -339,8 +343,10 @@ w.matched.reorg <- reshape(w.matched_bind,
 View(w.matched.reorg)
 
 #write to CSV
-write_csv(w.matched.reorg,'outputs/w.matched.reorg.csv')
+write_csv(w.matched.reorg,'outputs/w.matched.reorg_7Jul2021.csv') #update date
 
+
+### SPECIFY THE MODEL -------------------
 
 ##TRY OUT PGLM - didn't work
 library(pglm)
@@ -349,7 +355,7 @@ pglm(defor ~ time + time*CFM + pop,
      data = w.matched.reorg,
      effect = "twoways", #specify that we control for time period
      model = "within", #change within same unit over time
-     family = binomial('logit'), #is this right?
+     family = ordinal('logit'), #is this right?
      index = c("UID", "time"),
      start = NULL
      )
@@ -357,31 +363,23 @@ pglm(defor ~ time + time*CFM + pop,
 #(Trying to get pglm to work)
 #tried family = binomial('logit') and got below error
 
+#Error in pglm(defor ~ time + time * CFM + pop, data = w.matched.reorg,  : 
+#                the response must have exactly 2 different values
+
+#The above error is probably because this model expects a binary (0, 1) outcome variable, and we have a continuous (0-1) deforestation outcome variable now
+
+#tried family = ordinal('logit') and got below error
+
 # Error in maxRoutine(fn = logLik, grad = grad, hess = hess, start = start,  : 
 #argument "start" is missing, with no default
 
-#tried family = ordinal('logit') and got this error
-
-#Error in pglm(defor ~ time + time * CFM + pop, data = w.matched.reorg,  : 
-#the response must have at least 3 different values
-
-#tried family = binomial('probit') and got the same error as the first time
-
-#Error in maxRoutine(fn = logLik, grad = grad, hess = hess, start = start,  : 
-#                            argument "start" is missing, with no default
-
-#tried  family = 'logit'
-
-#Error in get(family, mode = "function") : 
-#object 'logit' of mode 'function' was not found
-
 
 #TRY OUT CONDITIONAL LOGIT MODEL (STEPHEN PARRY's SUGGESTION)
-# logit <- glm(defor ~ time + time*CFM + pop,
-#              data = w.matched.reorg,
-#              family = binomial)
+logit <- glm(defor ~ time + time*CFM + pop,
+              data = w.matched.reorg,
+              family = binomial)
 
-#summary(logit)
+summary(logit)
 
 ##Try again
 library(survival)
