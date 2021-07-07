@@ -15,32 +15,141 @@ pa_90m_data <- read_csv("data/sample_points/pa_for05_data_90m.csv")
 #cfm_300m_data <- read_csv("data/sample_points/cfm_for00_data_300m.csv") 
 #pa_300m_data <- read_csv("data/sample_points/pa_for00_data_300m.csv")
 
+
 # working with 90m data to start
 
 # remove CFM data point if PA ID has a value (those are sample points in areas that overlap both PAs and CFM areas)
 # and vice versa
 
 names(cfm_90m_data) #get variable names
-unique(cfm_90m_data$parstrid) #get unique values of PA IDs, includes NA
-#cfm_90m_data$parstrid %>% replace_na(0) #replace NA values with 0
-#unique(cfm_90m_data$parstrid) #check if worked, didn't work
+
+#rename the variables
+
+cfm_90m_data <- rename(cfm_90m_data,
+                       dist_cart = distcartutm,
+                       dist_road = distroadutm,
+                       dist_urb = disturbutm,
+                       dist_vil = distvilutm,
+                       DVSP = durationrst,
+                       elev = elevutmmskt,
+                       for2000 = for200090m,
+                       for2001 = for200190m,
+                       for2002 = for200290m,
+                       for2003 = for200390m,
+                       for2004 = for200490m,
+                       for2005 = for200590m,
+                       for2006 = for200690m,
+                       for2007 = for200790m,
+                       for2008 = for200890m,
+                       for2009 = for200990m,
+                       for2010 = for201090m,
+                       for2011 = for201190m,
+                       for2012 = for201290m,
+                       for2013 = for201390m,
+                       for2014 = for201490m,
+                       for2015 = for201590m,
+                       for2016 = for201690m,
+                       for2017 = for201790m,
+                       pop00 = lspop2000,
+                       pop01 = lspop2000,
+                       pop02 = lspop2000,
+                       pop03 = lspop2000,
+                       pop04 = lspop2000,
+                       pop05 = lspop2005,
+                       pop06 = lspop2000,
+                       pop07 = lspop2000,
+                       pop08 = lspop2000,
+                       pop09 = lspop2000,
+                       pop10 = lspop2000,
+                       pop11 = lspop2000,
+                       pop12 = lspop2000,
+                       pop13 = lspop2000,
+                       pop14 = lspop2000,
+                       pop15 = lspop2000,
+                       pop16 = lspop2000,
+                       pop17 = lspop2000,
+                       rice = paddythrutm,
+                       precip = precyrutm,
+                       slope = slopeutm,
+                       veg = vegtyperstr,
+                       cfm_id = cfmrstrid,
+                       pa_id = parstrid,
+                       dist_edge = distedge90m) 
+
+unique(cfm_90m_data$pa_id) #get unique values of PA IDs, includes NA
 cfm_90m_data <- cfm_90m_data %>% 
-  mutate(parstrid = replace(as.numeric(parstrid), which(is.na(parstrid)), 0))
+  mutate(pa_id = replace(as.numeric(pa_id), which(is.na(pa_id)), 0))
+unique(cfm_90m_data$pa_id) #check if worked - no NA values, worked
 
 cfm_90m_filter <- cfm_90m_data %>%
-  filter(cfm_90m_data$parstrid<=0) #remove rows where PA ID is not zero
-unique(cfm_90m_filter$parstrid) #check if worked - only 0 values returned, worked
+  filter(cfm_90m_data$pa_id<=0) #remove rows where PA ID is not zero
+unique(cfm_90m_filter$pa_id) #check if worked - only 0 values returned, worked
 
 #repeat for PA data
+
 names(pa_90m_data) #get variable names
-unique(pa_90m_data$cfmrstrid) #get unique values of CFM IDs - includes NA, we want NA to be 0
+
+#rename the variables
+
+pa_90m_data <- rename(pa_90m_data,
+                       dist_cart = distcartutm,
+                       dist_road = distroadutm,
+                       dist_urb = disturbutm,
+                       dist_vil = distvilutm,
+                       DVSP = durationrst,
+                       elev = elevutmmskt,
+                       for2000 = for200090m,
+                       for2001 = for200190m,
+                       for2002 = for200290m,
+                       for2003 = for200390m,
+                       for2004 = for200490m,
+                       for2005 = for200590m,
+                       for2006 = for200690m,
+                       for2007 = for200790m,
+                       for2008 = for200890m,
+                       for2009 = for200990m,
+                       for2010 = for201090m,
+                       for2011 = for201190m,
+                       for2012 = for201290m,
+                       for2013 = for201390m,
+                       for2014 = for201490m,
+                       for2015 = for201590m,
+                       for2016 = for201690m,
+                       for2017 = for201790m,
+                       pop00 = lspop2000,
+                       pop01 = lspop2000,
+                       pop02 = lspop2000,
+                       pop03 = lspop2000,
+                       pop04 = lspop2000,
+                       pop05 = lspop2005,
+                       pop06 = lspop2000,
+                       pop07 = lspop2000,
+                       pop08 = lspop2000,
+                       pop09 = lspop2000,
+                       pop10 = lspop2000,
+                       pop11 = lspop2000,
+                       pop12 = lspop2000,
+                       pop13 = lspop2000,
+                       pop14 = lspop2000,
+                       pop15 = lspop2000,
+                       pop16 = lspop2000,
+                       pop17 = lspop2000,
+                       rice = paddythrutm,
+                       precip = precyrutm,
+                       slope = slopeutm,
+                       veg = vegtyperstr,
+                       cfm_id = cfmrstrid,
+                       pa_id = parstrid,
+                       dist_edge = distedge90m) 
+
+unique(pa_90m_data$cfm_id) #get unique values of CFM IDs - includes NA, we want NA to be 0
 pa_90m_data <- pa_90m_data %>% 
-  mutate(cfmrstrid = replace(as.numeric(cfmrstrid), which(is.na(cfmrstrid)), 0))
-unique(pa_90m_data$cfmrstrid) # WORKED!!
+  mutate(cfm_id = replace(as.numeric(cfm_id), which(is.na(cfm_id)), 0))
+unique(pa_90m_data$cfm_id) # WORKED!!
          
 pa_90m_filter <- pa_90m_data %>%
-  filter(cfmrstrid<=0) #remove rows where PA ID is not NA
-unique(pa_90m_filter$cfmrstrid) #check if worked - only 0 values returned, worked
+  filter(cfm_id<=0) #remove rows where PA ID is not NA
+unique(pa_90m_filter$cfm_id) #check if worked - only 0 values returned, worked
 
 # add columns for CFM (0 or 1) and PA (0 or 1)
 
@@ -64,26 +173,6 @@ cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA 
 # We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
 Treat <- cfm_pa_data_90m_no_na$CFM # Define treatment
-
-#rename the covariates
-
-names(cfm_pa_data_90m_no_na)
-
-cfm_pa_data_90m_no_na <- rename(cfm_pa_data_90m_no_na,
-                                dist_cart = distcartutm,
-                                dist_road = distroadutm,
-                                dist_urb = disturbutm,
-                                dist_vil = distvilutm,
-                                DVSP = durationrst,
-                                elev = elevutmmskt,
-                                pop05 = lspop2005,
-                                rice = paddythrutm,
-                                precip = precyrutm,
-                                slope = slopeutm,
-                                veg = vegtyperstr,
-                                cfm_id = cfmrstrid,
-                                pa_id = parstrid,
-                                dist_edge = distedge90m) 
 
 cov.names <- c("dist_cart", "dist_edge", "dist_road","dist_urb","dist_vil","DVSP","elev","pop05","rice","precip","slope","veg") # Names of covariates used to match **NOTE alphabetical order, included population 2005
 
