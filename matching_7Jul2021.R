@@ -194,7 +194,7 @@ Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE",
 # What we want is the ATT (Average effect of Treatment on the Treated). So, we leave the argument estimand to its defauld (i.e., "ATT")
 # Weight = 2 specifies Mahalanobis distance matching
 
-m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex,replace=TRUE, ties=TRUE, Weight=2) # run matching
+m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex,replace=TRUE, ties=TRUE, Weight=2) # run matching, took less than 2 min
 
 ## CHECK COVARIATE BALANCE
 
@@ -213,8 +213,8 @@ matched <- rbind(cfm_pa_data_90m_no_na[m1$index.treated,],cfm_pa_data_90m_no_na[
 wght <- c(m1$weights,m1$weights) # weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
 
 #write to CSV *update date!
-write_csv(matched, 'outputs/mahalanobis_matched_1Jul2021.csv')
-write.csv(wght,'outputs/mahalanobis_wght_1Jul2021.csv') #note this outputs a table with only values of 1***
+write_csv(matched, 'outputs/mahalanobis_matched_7Jul2021.csv')
+write.csv(wght,'outputs/mahalanobis_wght_7Jul2021.csv') #note this outputs a table with only values of 1***
 
 
 
