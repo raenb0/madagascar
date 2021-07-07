@@ -109,7 +109,7 @@ wght <- c(m1$weights,m1$weights) # weights of the observations in the matched da
 
 #write to CSV *update date!
 write_csv(matched, 'outputs/mahalanobis_matched_1Jul2021.csv')
-write.csv(wght,'outputs/mahalanobis_wght_1Jul2021.csv')
+write.csv(wght,'outputs/mahalanobis_wght_1Jul2021.csv') #note this outputs a table with only values of 1***
 
 
 
@@ -123,7 +123,7 @@ write.csv(wght,'outputs/mahalanobis_wght_1Jul2021.csv')
 
 ## CHECK COVARIATE BALANCE
 #mb2 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + precip + slope + pop00 + DVSP + veg,
-                    match.out = mgen1, nboots = 500, data=cfm_pa_data_90m_no_na) 
+#                    match.out = mgen1, nboots = 500, data=cfm_pa_data_90m_no_na) 
 
 ## MATCHED DATASET TO BE USED FOR THE DIFFERENCE IN DIFFERENCE (DID) ANALYSIS 
 
@@ -139,6 +139,13 @@ write.csv(wght,'outputs/mahalanobis_wght_1Jul2021.csv')
 
 ## REORGANIZE MAHALANOBIS MATCHED DATA FOR ANALYSIS
 
+#load tabular data if needed
+library(tidyverse)
+library(dplyr)
+
+matched <- read_csv('outputs/mahalanobis_matched_1Jul2021.csv')
+wght <- read_csv('outputs/mahalanobis_wght_1Jul2021.csv')
+
 #add weights to matched dataset
 
 w.matched <- data.frame(matched, wght)
@@ -148,8 +155,8 @@ w.matched <- data.frame(matched, wght)
 #and a 1 if there was deforestation from 2005 and 2010 
 #(I know the order seems wrong, but this way we avoid negative numbers)
 
-w.matched$defor.1 <- w.matched$for05-w.matched$for10
-w.matched$defor.2 <- w.matched$for10-w.matched$for14
+w.matched$defor.1 <- w.matched$for200590m-w.matched$for201090m
+w.matched$defor.2 <- w.matched$for201090m-w.matched$for201490m
 
 #rename population variables 
 #Ranaivo says: It is better to use the pop at the beginning of the periods 
@@ -157,19 +164,26 @@ w.matched$defor.2 <- w.matched$for10-w.matched$for14
 #(we only need 2 time periods, but I renamed all three for clarity)
 
 names(w.matched)[names(w.matched) == "pop05"] <- "pop.1"
-names(w.matched)[names(w.matched) == "pop10"] <- "pop.2"
-names(w.matched)[names(w.matched) == "pop13"] <- "pop.3"
+names(w.matched)[names(w.matched) == "lspop2010"] <- "pop.2"
+names(w.matched)[names(w.matched) == "lspop2014"] <- "pop.3"
 
-#Remove unnecessary variables, i.e., for05, for10, for14, pop.3
+#Select desired variables, reorder columns
 
-w.matched.subs = subset(w.matched, select = -c(for05, for10, for14, pop.3) )
+names(w.matched)
+
+w.matched.subs <- w.matched %>% 
+  select(CFM, PA, cfm_id, pa_id, dist_cart, dist_edge, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg,  pop.1, pop.2, defor.1, defor.2)
 
 #subset data to split up PA and CFM data
+
 #for PA data:
-PA_data <- subset(w.matched.subs, CFM==0, select = FID:defor.2)
+PA_data <- w.matched.subs %>%
+  filter(CFM==0)
 
 #for CFM data:
-CFM_data <- subset(w.matched.subs, CFM==1, select = FID:defor.2)
+
+CFM_data <- w.matched.subs %>%
+  filter(CFM==1)
 
 #add unique ID columns to each subset:
 PA_data$ID <- seq.int(nrow(PA_data))
@@ -204,14 +218,15 @@ View(w.matched_bind)
 w.matched.reorg <- reshape(w.matched_bind,
                             idvar = "UID",
                             direction = "long",
-                            varying = c(12, 13, 17, 18)
+                            varying = c("pop.1", "pop.2", "defor.1", "defor.2")
                             )
-
-#write to CSV
-write.csv(w.matched.reorg,'w.matched.reorg.csv')
 
 #View
 View(w.matched.reorg)
+
+#write to CSV
+write_csv(w.matched.reorg,'outputs/w.matched.reorg.csv')
+
 
 ##TRY OUT PGLM - didn't work
 #library(pglm)
@@ -252,7 +267,7 @@ View(w.matched.reorg)
 #              data = w.matched.reorg,
 #              family = binomial)
 
-summary(logit)
+#summary(logit)
 
 ##Try again
 library(survival)
@@ -260,5 +275,10 @@ library(survival)
 clogit <- clogit(defor ~ time + time*CFM + pop,
        data = w.matched.reorg,
        method="exact")
+
+#Warning messages:
+# 1: In Surv(rep(1, 45852L), defor) : Invalid status value, converted to NA
+# 2: In fitter(X, Y, istrat, offset, init, control, weights = weights,  :
+#               Ran out of iterations and did not converge
 
 summary(clogit)
