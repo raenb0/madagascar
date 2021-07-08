@@ -182,6 +182,8 @@ cfm_pa_data_90m <- cfm_pa_data_90m %>% dplyr::select(-InclProb) #dropped first v
 
 cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values
 
+#write to CSV
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na.csv')
 
 # Define treatment
 # Ranaivo says: We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
