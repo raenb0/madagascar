@@ -350,6 +350,9 @@ write_csv(w.matched.reorg,'outputs/w.matched.reorg_7Jul2021.csv') #update date
 
 ### SPECIFY THE MODEL -------------------
 
+#load data if needed
+w.matched.reorg <- read_csv('outputs/w.matched.reorg_7Jul2021.csv')  
+
 ##TRY OUT PGLM - didn't work
 library(pglm)
 
