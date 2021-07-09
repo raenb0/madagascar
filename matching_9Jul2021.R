@@ -149,7 +149,7 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values
 
 #write to CSV
-write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_8Jul2021.csv') #update date
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_9Jul2021.csv') #update date
 
 # Define treatment
 # Ranaivo says: We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
@@ -201,8 +201,8 @@ wght <- c(m1$weights,m1$weights) # weights of the observations in the matched da
 
 #write to CSV *update date!
 
-write_csv(matched, 'outputs/mahalanobis_matched_8Jul2021.csv')
-write.csv(wght,'outputs/mahalanobis_wght_8Jul2021.csv') #note this outputs a table with only values of 1***
+write_csv(matched, 'outputs/mahalanobis_matched_9Jul2021.csv')
+write.csv(wght,'outputs/mahalanobis_wght_9Jul2021.csv') #note this outputs a table with only values of 1***
 
 
 
@@ -237,8 +237,8 @@ library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_8Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_8Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_9Jul2021.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_9Jul2021.csv')
 
 #add weights to matched dataset
 
@@ -314,13 +314,13 @@ w.matched.reorg <- reshape(w.matched_bind,
 View(w.matched.reorg)
 
 #write to CSV
-write_csv(w.matched.reorg,'outputs/w.matched.reorg_8Jul2021b.csv') #update date
+write_csv(w.matched.reorg,'outputs/w.matched.reorg_9Jul2021.csv') #update date
 
 
 ### SPECIFY THE TWO-PERIOD MODEL -------------------
 
 #load data if needed
-w.matched.reorg <- read_csv('outputs/w.matched.reorg_8Jul2021b.csv')  
+w.matched.reorg <- read_csv('outputs/w.matched.reorg_9Jul2021b.csv')  
 
 library(plm)
 #library(stargazer)
@@ -340,8 +340,8 @@ library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_8Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_8Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_9Jul2021.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_9Jul2021.csv')
 
 #add weights to matched dataset
 
@@ -457,7 +457,7 @@ w_matched_yr_reorg <- rename(w_matched_yr_reorg,
 View(w_matched_yr_reorg)
 
 #write to CSV
-write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_9Jul2021b.csv') #update date
+write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_9Jul2021c.csv') #update date
 
 
 ### SPECIFY THE ANNUAL MODEL -------------------
