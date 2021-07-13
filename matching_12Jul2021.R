@@ -201,8 +201,8 @@ wght <- c(m1$weights,m1$weights) # weights of the observations in the matched da
 
 #write to CSV *update date!
 
-write_csv(matched, 'outputs/mahalanobis_matched_9Jul2021.csv')
-write.csv(wght,'outputs/mahalanobis_wght_9Jul2021.csv') #note this outputs a table with only values of 1***
+write_csv(matched, 'outputs/mahalanobis_matched_12Jul2021.csv')
+write.csv(wght,'outputs/mahalanobis_wght_12Jul2021.csv') #note this outputs a table with only values of 1***
 
 
 
@@ -237,8 +237,8 @@ library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_9Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_9Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_12Jul2021.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_12Jul2021.csv')
 
 #add weights to matched dataset
 
@@ -265,12 +265,19 @@ w.matched$pop.2 <- w.matched$pop10
 w.matched$edge.1 <- w.matched$edge_05
 w.matched$edge.2 <- w.matched$edge_10
 
+#add change in forest density (fragmentation) variables **New addition July 12
+#this will return a 0 if there was no change in fragmentation % between 2005 and 2010, 
+#and 0-100 if there was change in fragmentation % from 2005 and 2010 
+
+w.matched$dens.1 <- w.matched$fordens05-w.matched$fordens10
+w.matched$dens.2 <- w.matched$fordens10-w.matched$fordens14
+
 #Select desired variables, reorder columns
 
 names(w.matched)
 
 w.matched.subs <- w.matched %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg_type,  pop.1, pop.2, defor.1, defor.2, edge.1, edge.2)
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg_type,  pop.1, pop.2, defor.1, defor.2, edge.1, edge.2, dens.1, dens.2)
 
 #subset data to split up PA and CFM data
 
@@ -307,29 +314,41 @@ View(w.matched_bind)
 w.matched.reorg <- reshape(w.matched_bind,
                             idvar = "UID",
                             direction = "long",
-                            varying = c("pop.1", "pop.2", "defor.1", "defor.2", "edge.1", "edge.2")
+                            varying = c("pop.1", "pop.2", "defor.1", "defor.2", "edge.1", "edge.2", "dens.1", "dens.2")
                             )
 
 #View
 View(w.matched.reorg)
 
 #write to CSV
-write_csv(w.matched.reorg,'outputs/w.matched.reorg_9Jul2021.csv') #update date
+write_csv(w.matched.reorg,'outputs/w.matched.reorg_12Jul2021.csv') #update date
 
 
-### SPECIFY THE TWO-PERIOD MODEL -------------------
+
+### SPECIFY THE TWO-PERIOD MODEL, DEFORESTATION OUTCOME -------------------
+#outcome variable: DEFORESTATION (so POSITIVE coefficients = MORE deforestation, I think)
 
 #load data if needed
-w.matched.reorg <- read_csv('outputs/w.matched.reorg_9Jul2021b.csv')  
+w.matched.reorg <- read_csv('outputs/w.matched.reorg_12Jul2021b.csv')  
 
 library(plm)
-#library(stargazer)
 
 did_m1 <- plm(defor ~ CFM*time + pop + edge, data = w.matched.reorg, effect="twoways", model = "within", index = c("UID", "time"))
 
 summary(did_m1)
 
-#stargazer(did_m1, title = "Whatever Title", align =TRUE, type = "text") #not available for this version of R
+
+### SPECIFY THE TWO-PERIOD MODEL, FRAGMENTATION OUTCOME -------------------
+#outcome variable: FRAGMENTATION (so POSITIVE coefficients = MORE fragmentation, I think)
+
+#load data if needed
+w.matched.reorg <- read_csv('outputs/w.matched.reorg_12Jul2021b.csv')  
+
+library(plm)
+
+did_m2 <- plm(dens ~ CFM*time + pop + edge, data = w.matched.reorg, effect="twoways", model = "within", index = c("UID", "time"))
+
+summary(did_m2)
 
 
 
@@ -340,8 +359,8 @@ library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_9Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_9Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_12Jul2021.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_12Jul2021.csv')
 
 #add weights to matched dataset
 
@@ -379,7 +398,7 @@ w_matched_yr$pop.9 <- w_matched_yr$pop13
 names(w_matched_yr)
 
 w_matched_yr_subs <- w_matched_yr %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge_10, edge_14, elev, rice, precip, slope, veg_type,  pop.1:pop.9, for.1:for.9)
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge_10, edge_14,fordens05, fordens10, fordens14, elev, rice, precip, slope, veg_type,  pop.1:pop.9, for.1:for.9)
 
 #subset data to split up PA and CFM data
 
@@ -412,33 +431,6 @@ View(CFM_data_yr)
 w_matched_yr_bind <- rbind(PA_data_yr, CFM_data_yr)
 View(w_matched_yr_bind)
 
-#reorganize (doesn't work)
-# w_matched_yr_reorg <- w_matched_yr_bind %>% pivot_longer(
-#   cols = pop.1:for.9,
-#   names_to = c("pop","forest"),
-#   names_sep = ("."),
-#   values_to = c("pop","forest")
-# )
-
-#reorganize (works for pop data only)
-# w_matched_yr_reorg <- w_matched_yr_bind %>% pivot_longer(
-#   cols = starts_with("pop."),
-#   names_to = "time",
-#   names_prefix = "pop.", #this removes the pop. prefix from the time variable
-#   values_to = "pop"
-# )
-
-#reshape (doesn't work)
-# w_matched_yr_reorg <- reshape(w_matched_yr_bind,
-#                               varying = list(18:35),
-#                               idvar = "UID",
-#                               direction = "long"
-# )# w_matched_yr_reorg <- reshape(w_matched_yr_bind,
-#                               varying = list(18:35),
-#                               idvar = "UID",
-#                               direction = "long"
-# )
-
 # reorganize (this works, but returns columns with names "p" (pop) and "r" (for)
 w_matched_yr_reorg <- w_matched_yr_bind %>%
   pivot_longer(
@@ -457,10 +449,11 @@ w_matched_yr_reorg <- rename(w_matched_yr_reorg,
 View(w_matched_yr_reorg)
 
 #write to CSV
-write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_9Jul2021c.csv') #update date
+write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_12Jul2021c.csv') #update date
 
 
 ### SPECIFY THE ANNUAL MODEL -------------------
+#outcome variable: FOREST COVER, so POSITIVE coefficients indicate MORE forest cover (LESS deforestation), I think
 
 #load data if needed
 w_matched_yr_reorg <- read_csv('outputs/w_matched_yr_reorg_9Jul2021b.csv')  
