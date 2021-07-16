@@ -108,15 +108,21 @@ pa_for_stack <- list.files("data/pa_forest_30m/", pattern = "*.tif$", full.names
 #   stack()
 
 
-# Annual data (2000-2017) (resolution: 90 x 90)--------------------------------
+# Annual data (2000-2017)-----------------------------------------------------------
+
+
+# all forest (30m)
+
+#forest_30m_stack <- list.files("data/forest_annual_30m/", pattern = "*.tif$", full.names = TRUE) %>%
+#  stack() #Error in compareRaster(rasters) : different extent
 
 # all forest (90m)
 
-# forest_90m_stack <- list.files("data/forest_annual_90m/", pattern = "*.tif$", full.names = TRUE) %>%
-#  stack()
+forest_90m_stack <- list.files("data/forest_annual_90m/", pattern = "*.tif$", full.names = TRUE) %>%
+ stack()
 
 
-# Calculate trends in forest cover ----------------------------------------
+# Calculate and plot overall trends in forest cover ----------------------------------------
 
 # calculate sum of rasters (count of forested pixels) 
 
@@ -204,45 +210,7 @@ defor_trends_periodic_pct_plot
 ggsave("./outputs/forest_loss_periodic.png", plot = defor_trends_periodic_plot)
 ggsave("./outputs/forest_loss_periodic_pct.png", plot = defor_trends_periodic_pct_plot)
 
-# plot absolute forest loss (count of 30m pixels)
 
-# plot_forest_loss_periodic_abs <- ggplot(data = defor_trends_periodic) +
-#   geom_point(mapping = aes(x = Year, y = National), color = "green") +
-#   geom_line(mapping = aes(x = Year, y = National), group = 1, color = "green") +
-#   geom_point(mapping = aes(x = Year, y = CFM), color = "blue") +
-#   geom_line(mapping = aes(x = Year, y = CFM), group = 1, color = "blue") +
-#   geom_point(mapping = aes(x = Year, y = PA), color = "red")+
-#   geom_line(mapping = aes(x = Year, y = PA), group = 1, color = "red") +
-#   ylab("Count of forested 30 m grid cells")
-
-# also tried y = log10(CFM) etc. to make more comparable
-
-# plot_forest_loss_periodic_log <- ggplot(data = defor_trends_periodic) +
-#   geom_point(mapping = aes(x = Year, y = log10(National)), color = "green") +
-#   geom_line(mapping = aes(x = Year, y = log10(National)), group = 1, color = "green") +
-#   geom_point(mapping = aes(x = Year, y = log10(CFM)), color = "blue") +
-#   geom_line(mapping = aes(x = Year, y = log10(CFM)), group = 1, color = "blue") +
-#   geom_point(mapping = aes(x = Year, y = log10(PA)), color = "red")+
-#   geom_line(mapping = aes(x = Year, y = log10(PA)), group = 1, color = "red")  +
-#   ylab("Log10(Count of forested 30 m grid cells)")
-
-
-# plot forest loss as a % of 1990 forest cover (baseline)
-
-# plot_forest_loss_periodic_pct <- ggplot(data = defor_trends_periodic) +
-#   geom_point(mapping = aes(x = Year, y = National_pct), color = "green") +
-#   geom_line(mapping = aes(x = Year, y = National_pct), group = 1, color = "green") +
-#   geom_point(mapping = aes(x = Year, y = CFM_pct), color = "blue") +
-#   geom_line(mapping = aes(x = Year, y = CFM_pct), group = 1, color = "blue") +
-#   geom_point(mapping = aes(x = Year, y = PA_pct), color = "red")+
-#   geom_line(mapping = aes(x = Year, y = PA_pct), group = 1, color = "red") +
-#   ylab("Percent of 1990 forest cover (30m)")
-
-
-#save plots
-ggsave("./outputs/forest_loss_periodic_absolute.png", plot = plot_forest_loss_periodic_abs)
-ggsave("./outputs/forest_loss_periodic_log.png", plot = plot_forest_loss_periodic_log)
-ggsave("./outputs/forest_loss_periodic_pct.png", plot = plot_forest_loss_periodic_pct)
 
 
 # Calculate trends in forest fragmentation in CFM and PAs ---------------------
@@ -308,6 +276,36 @@ ggsave("./outputs/frag_means.png", plot = frag_means_plot)
 
 
 
+# Calculate trends in ANNUAL forest loss in CFM and PAs ---------------------
+
+library(prioritizr)
+
+forest_90m_cfm <- fast_extract(forest_90m_stack, cfm_pre05, fun = "sum") %>%
+  as.data.frame() %>%
+  setNames(names(forest_90m_stack))
+
+forest_90m_pa <- fast_extract(forest_90m_stack, protected_areas, fun = "sum") %>%
+  as.data.frame() %>%
+  setNames(names(forest_90m_stack))
+
+forest_pa_sum <- as.data.frame(colSums(forest_90m_pa)) #calculate sum across all PAs
+forest_pa_sum <- data.frame(year = row.names(forest_pa_sum), forest_pa_sum) #add rownames as column
+forest_cfm_sum <- as.data.frame(colSums(forest_90m_cfm)) #calculate sum across all CFM
+forest_cfm_sum <- data.frame(year = row.names(forest_cfm_sum), forest_cfm_sum) #add rownames as column
+
+forest_pa_cfm_sum <- inner_join(forest_pa_sum,forest_cfm_sum) #join PA and CFM data
+
+names(forest_pa_cfm_sum)
+
+forest_pa_cfm_sum <- rename(forest_pa_cfm_sum, #rename columns
+                            forest_pa = colSums.forest_90m_pa.,
+                            forest_cfm = colSums.forest_90m_cfm.)
+
+forest_pa_cfm_sum$year<-gsub("for_","",as.character(forest_pa_cfm_sum$year)) #remove text "for_" from "year" column
+
+forest_pa_cfm_sum$year<-gsub("_90m","",as.character(forest_pa_cfm_sum$year)) #remove text "_90m" from "year" column
+
+forest_pa_cfm_sum$year <- as.numeric(forest_pa_cfm_sum$year)
 
 
 
