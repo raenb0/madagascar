@@ -212,6 +212,24 @@ ggsave("./outputs/forest_loss_periodic_pct.png", plot = defor_trends_periodic_pc
 
 
 
+# calculate the overall forest loss in Madagascar nationally
+
+forest_madagascar_sum <- cellStats(forest_90m_stack, stat='sum') %>%
+  as.data.frame()
+
+forest_madagascar_sum <- data.frame(year = row.names(forest_madagascar_sum), forest_madagascar_sum) #add rownames as column
+
+names(forest_madagascar_sum)
+
+forest_madagascar_sum <- rename(forest_madagascar_sum, #rename columns
+                            forest_sum = .)
+
+forest_madagascar_sum$year<-gsub("for_","",as.character(forest_madagascar_sum$year)) #remove text "for_" from "year" column
+
+forest_madagascar_sum$year<-gsub("_90m","",as.character(forest_madagascar_sum$year)) #remove text "_90m" from "year" column
+
+forest_madagascar_sum$year <- as.numeric(forest_madagascar_sum$year)
+
 
 # Calculate trends in forest fragmentation in CFM and PAs ---------------------
 library(prioritizr)
