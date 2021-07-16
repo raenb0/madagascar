@@ -224,6 +224,37 @@ names(forest_madagascar_sum)
 forest_madagascar_sum <- rename(forest_madagascar_sum, #rename columns
                             forest_sum = .)
 
+forest_madagascar_pct <- data.frame(year=forest_madagascar_sum$year,
+                                    forest_pct = forest_madagascar_sum$forest_sum/(forest_madagascar_sum$forest_sum[1]))
+
+View(forest_madagascar_pct)
+
+#write to CSV files
+write.csv(forest_madagascar_sum, file = "./outputs/forest_madagascar_sum.csv")
+write.csv(forest_madagascar_pct, file = "./outputs/forest_madagascar_pct.csv")
+
+#plot
+
+forest_madagascar_sum_plot <- ggplot(forest_madagascar_sum) + 
+  geom_line(aes(x=year, y=forest_sum)) +
+  geom_point(aes(x=year, y=forest_sum)) +
+  ylab("Sum of forested pixels (90m)")
+
+forest_madagascar_sum_plot
+
+forest_madagascar_pct_plot <- ggplot(forest_madagascar_pct) + 
+  geom_line(aes(x=year, y=forest_pct)) +
+  geom_point(aes(x=year, y=forest_pct)) +
+  ylab("Forest cover as a percent of 1990 forest cover (90m)")
+
+forest_madagascar_pct_plot
+
+# save plots
+
+ggsave("./outputs/forest_madagascar_sum.png", plot = forest_madagascar_sum_plot)
+ggsave("./outputs/forest_madagascar_pct.png", plot = forest_madagascar_pct_plot)
+
+
 forest_madagascar_sum$year<-gsub("for_","",as.character(forest_madagascar_sum$year)) #remove text "for_" from "year" column
 
 forest_madagascar_sum$year<-gsub("_90m","",as.character(forest_madagascar_sum$year)) #remove text "_90m" from "year" column
@@ -231,7 +262,7 @@ forest_madagascar_sum$year<-gsub("_90m","",as.character(forest_madagascar_sum$ye
 forest_madagascar_sum$year <- as.numeric(forest_madagascar_sum$year)
 
 
-# Calculate trends in forest fragmentation in CFM and PAs ---------------------
+# Calculate trends in forest fragmentation in CFM and PAs (periodic) ---------------------
 library(prioritizr)
 
 frag_cfm <- fast_extract(frag_stack, cfm_pre05, fun = "mean") %>%
