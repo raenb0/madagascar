@@ -224,6 +224,14 @@ names(forest_madagascar_sum)
 forest_madagascar_sum <- rename(forest_madagascar_sum, #rename columns
                             forest_sum = .)
 
+forest_madagascar_sum$year<-gsub("for_","",as.character(forest_madagascar_sum$year)) #remove text "for_" from "year" column
+
+forest_madagascar_sum$year<-gsub("_90m","",as.character(forest_madagascar_sum$year)) #remove text "_90m" from "year" column
+
+forest_madagascar_sum$year <- as.numeric(forest_madagascar_sum$year)
+
+#calculate annual forest cover as a percent of 1990 forest cover (baseline)
+
 forest_madagascar_pct <- data.frame(year=forest_madagascar_sum$year,
                                     forest_pct = forest_madagascar_sum$forest_sum/(forest_madagascar_sum$forest_sum[1]))
 
@@ -255,11 +263,68 @@ ggsave("./outputs/forest_madagascar_sum.png", plot = forest_madagascar_sum_plot)
 ggsave("./outputs/forest_madagascar_pct.png", plot = forest_madagascar_pct_plot)
 
 
-forest_madagascar_sum$year<-gsub("for_","",as.character(forest_madagascar_sum$year)) #remove text "for_" from "year" column
 
-forest_madagascar_sum$year<-gsub("_90m","",as.character(forest_madagascar_sum$year)) #remove text "_90m" from "year" column
+# Calculate trends in ANNUAL forest loss in CFM and PAs ---------------------
 
-forest_madagascar_sum$year <- as.numeric(forest_madagascar_sum$year)
+library(prioritizr)
+
+forest_90m_cfm <- fast_extract(forest_90m_stack, cfm_pre05, fun = "sum") %>%
+  as.data.frame() %>%
+  setNames(names(forest_90m_stack))
+
+forest_90m_pa <- fast_extract(forest_90m_stack, protected_areas, fun = "sum") %>%
+  as.data.frame() %>%
+  setNames(names(forest_90m_stack))
+
+forest_pa_sum <- as.data.frame(colSums(forest_90m_pa)) #calculate sum across all PAs
+forest_pa_sum <- data.frame(year = row.names(forest_pa_sum), forest_pa_sum) #add rownames as column
+forest_cfm_sum <- as.data.frame(colSums(forest_90m_cfm)) #calculate sum across all CFM
+forest_cfm_sum <- data.frame(year = row.names(forest_cfm_sum), forest_cfm_sum) #add rownames as column
+
+forest_pa_cfm_sum <- inner_join(forest_pa_sum,forest_cfm_sum) #join PA and CFM data
+
+names(forest_pa_cfm_sum)
+
+forest_pa_cfm_sum <- rename(forest_pa_cfm_sum, #rename columns
+                            forest_pa = colSums.forest_90m_pa.,
+                            forest_cfm = colSums.forest_90m_cfm.)
+
+forest_pa_cfm_sum$year<-gsub("for_","",as.character(forest_pa_cfm_sum$year)) #remove text "for_" from "year" column
+
+forest_pa_cfm_sum$year<-gsub("_90m","",as.character(forest_pa_cfm_sum$year)) #remove text "_90m" from "year" column
+
+forest_pa_cfm_sum$year <- as.numeric(forest_pa_cfm_sum$year)
+
+View(forest_pa_cfm_sum)
+
+#calculate pa and cfm forest cover as a percent of 2000 forest cover (baseline)
+
+forest_pa_cfm_pct <- data.frame(year=forest_pa_cfm_sum$year,
+                                      forest_pa_pct = forest_pa_cfm_sum$forest_pa/(forest_pa_cfm_sum$forest_pa[1]),
+                                   forest_cfm_pct = forest_pa_cfm_sum$forest_cfm/(forest_pa_cfm_sum$forest_cfm[1])
+)
+
+View(forest_pa_cfm_pct)
+
+#join national, pa and cfm forest pct tables
+
+forest_trends_annual_pct <- inner_join(forest_madagascar_pct, forest_pa_cfm_pct, by="year")
+
+View(forest_trends_annual_pct)
+
+library(reshape2)
+
+forest_trends_pct_reshape = melt(forest_trends_annual_pct, id=c("year")) #reshape data
+
+forest_trends_pct_plot <- ggplot(forest_trends_pct_reshape) + 
+  geom_line(aes(x=year, y=value, colour=variable)) +
+  geom_point(aes(x=year, y=value, colour=variable)) +
+  scale_colour_manual(values=c("red","green", "blue"))  +
+  ylab("Forest loss as a percentage of 2000 forest cover (%)")
+
+forest_trends_pct_plot
+
+ggsave("./outputs/forest_trends_annual_pct.png", plot = forest_trends_plot)
 
 
 # Calculate trends in forest fragmentation in CFM and PAs (periodic) ---------------------
@@ -322,39 +387,6 @@ frag_means_plot <- ggplot(frag_means_reshape) +
   ylab("Mean forest intactness (%)")
 
 ggsave("./outputs/frag_means.png", plot = frag_means_plot)
-
-
-
-# Calculate trends in ANNUAL forest loss in CFM and PAs ---------------------
-
-library(prioritizr)
-
-forest_90m_cfm <- fast_extract(forest_90m_stack, cfm_pre05, fun = "sum") %>%
-  as.data.frame() %>%
-  setNames(names(forest_90m_stack))
-
-forest_90m_pa <- fast_extract(forest_90m_stack, protected_areas, fun = "sum") %>%
-  as.data.frame() %>%
-  setNames(names(forest_90m_stack))
-
-forest_pa_sum <- as.data.frame(colSums(forest_90m_pa)) #calculate sum across all PAs
-forest_pa_sum <- data.frame(year = row.names(forest_pa_sum), forest_pa_sum) #add rownames as column
-forest_cfm_sum <- as.data.frame(colSums(forest_90m_cfm)) #calculate sum across all CFM
-forest_cfm_sum <- data.frame(year = row.names(forest_cfm_sum), forest_cfm_sum) #add rownames as column
-
-forest_pa_cfm_sum <- inner_join(forest_pa_sum,forest_cfm_sum) #join PA and CFM data
-
-names(forest_pa_cfm_sum)
-
-forest_pa_cfm_sum <- rename(forest_pa_cfm_sum, #rename columns
-                            forest_pa = colSums.forest_90m_pa.,
-                            forest_cfm = colSums.forest_90m_cfm.)
-
-forest_pa_cfm_sum$year<-gsub("for_","",as.character(forest_pa_cfm_sum$year)) #remove text "for_" from "year" column
-
-forest_pa_cfm_sum$year<-gsub("_90m","",as.character(forest_pa_cfm_sum$year)) #remove text "_90m" from "year" column
-
-forest_pa_cfm_sum$year <- as.numeric(forest_pa_cfm_sum$year)
 
 
 
