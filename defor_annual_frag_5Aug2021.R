@@ -122,17 +122,7 @@ forest_90m_stack <- list.files("data/forest_annual_90m/", pattern = "*.tif$", fu
  stack()
 
 
-# Calculate and plot overall trends in forest cover ----------------------------------------
-
-# calculate sum of rasters (count of forested pixels) 
-
-# count of total forest pixels in each time period (30m resolution)
-
-# sum_for90 <- cellStats(for90, 'sum')
-# sum_for00 <- cellStats(for00, 'sum')
-# sum_for05 <- cellStats(for05, 'sum')
-# sum_for10 <- cellStats(for10, 'sum')
-# sum_for14 <- cellStats(for14, 'sum')
+# Calculate and plot trends in forest cover (30m) -------------------------------------
 
 # count of total forest pixels in each time period (30m) using the raster stack
 
@@ -144,16 +134,6 @@ forest_30m_sum <- rename(forest_30m_sum,
                                 national_forest_sum = forest_30m_stack_sum)  #rename column
 forest_30m_sum$year <- c(1990,2000,2005,2010,2014)
 
-#forest_30m_sum$year <- gsub("for_","",as.character(forest_30m_sum$year)) #remove text "for_" from "year" column (creates atomic vector, doesn't work)
-
-# count of forest pixels in CFM areas in each time period
-
-# sum_cfm_for90 <- cellStats(cfm_for90, 'sum') #5,755,413
-# sum_cfm_for00 <- cellStats(cfm_for00, 'sum') #5,169,092
-# sum_cfm_for05 <- cellStats(cfm_for05, 'sum') #5,060,500
-# sum_cfm_for10 <- cellStats(cfm_for10, 'sum') #4,879,095
-# sum_cfm_for14 <- cellStats(cfm_for14, 'sum') #4,668,882
-
 # count of forest pixels in CFM areas (30m, raster stack)
 
 cfm_forest_stack_30m_sum <- cellStats(cfm_forest_stack_30m, 'sum') #takes some time
@@ -164,14 +144,6 @@ cfm_forest_30m_sum <- rename(cfm_forest_30m_sum,
                          cfm_forest_sum = cfm_forest_stack_30m_sum)  #rename column
 cfm_forest_30m_sum$year <- c(2000,2005,2010,2014,1990) #note order needs to be different
 
-#count of forest pixels in PA areas in each time period
-
-# sum_pa_for90 <- cellStats(pa_for90, 'sum') #13,604,528
-# sum_pa_for00 <- cellStats(pa_for00, 'sum') #13,329,679
-# sum_pa_for05 <- cellStats(pa_for05, 'sum') #13,255,320
-# sum_pa_for10 <- cellStats(pa_for10, 'sum') #13,126,507
-# sum_pa_for14 <- cellStats(pa_for14, 'sum') #12,942,051
-
 # count of forest pixels in PA areas (30m, raster stack)
 pa_forest_stack_30m_sum <- cellStats(pa_for_stack_30m, 'sum') #takes some time
 
@@ -180,16 +152,6 @@ pa_forest_30m_sum$raster_year <- row.names(pa_forest_30m_sum) # add rownames as 
 pa_forest_30m_sum <- rename(pa_forest_30m_sum,
                              pa_forest_sum = pa_forest_stack_30m_sum)  #rename column
 pa_forest_30m_sum$year <- c(2000,2005,2010,2014,1990) #note order needs to be checked
-
-# plot deforestation trends to check parallel trends assumption (old code)
-
-# defor_trends_periodic <- data.frame("Year" = c("1990","2000", "2005", "2010","2014"),
-#                            "National" = c(sum_for90, sum_for00, sum_for05, sum_for10, sum_for14),
-#                            "CFM" = c(sum_cfm_for90, sum_cfm_for00, sum_cfm_for05, sum_cfm_for10, sum_cfm_for14),
-#                            "PA" = c(sum_pa_for90, sum_pa_for00, sum_pa_for05, sum_pa_for10, sum_pa_for14))
-# 
-# defor_trends_periodic$Year <- as.numeric(defor_trends_periodic$Year)
-
 
 # plot deforestation trends to check parallel trends assumption (updated code)
 
@@ -222,9 +184,9 @@ defor_trends_periodic_plot
 #create new data frame for forest cover as a % of 1990 forest cover (baseline)
 
 defor_trends_periodic_pct <- data.frame(year=defor_trends_periodic$year,
-                                        national_pct = defor_trends_periodic$national_forest_sum/(defor_trends_periodic$national_forest_sum[1]),
-                                        cfm_pct = defor_trends_periodic$cfm_forest_sum/(defor_trends_periodic$cfm_forest_sum[1]),
-                                        pa_pct = defor_trends_periodic$pa_forest_sum/(defor_trends_periodic$pa_forest_sum[1]))
+                                        national_pct = defor_trends_periodic$national_forest_sum / (defor_trends_periodic$national_forest_sum[1]),
+                                        cfm_pct = defor_trends_periodic$cfm_forest_sum / (defor_trends_periodic$cfm_forest_sum[1]),
+                                        pa_pct = defor_trends_periodic$pa_forest_sum / (defor_trends_periodic$pa_forest_sum[1]))
 
 View(defor_trends_periodic_pct)
 
@@ -244,9 +206,9 @@ defor_trends_periodic_pct_plot
 ggsave("./outputs/forest_loss_periodic_5Aug2021.png", plot = defor_trends_periodic_plot)
 ggsave("./outputs/forest_loss_periodic_pct_5Aug2021.png", plot = defor_trends_periodic_pct_plot)
 
-# calculate the overall forest loss in Madagascar nationally
+# Calculate ANNUAL forest loss in Madagascar nationally (90m) --------------------
 
-forest_madagascar_sum <- cellStats(forest_90m_stack, stat='sum') %>%
+forest_madagascar_sum <- cellStats(forest_90m_stack, stat='sum') %>% #takes time to run
   as.data.frame()
 
 forest_madagascar_sum <- data.frame(year = row.names(forest_madagascar_sum), forest_madagascar_sum) #add rownames as column
@@ -296,7 +258,7 @@ ggsave("./outputs/forest_madagascar_pct.png", plot = forest_madagascar_pct_plot)
 
 
 
-# Calculate trends in ANNUAL forest loss in CFM and PAs ---------------------
+# Calculate ANNUAL forest loss in CFM and PAs (90m) ---------------------
 
 library(prioritizr)
 
@@ -391,6 +353,17 @@ frag00_mean <- cellStats(frag00, stat = 'mean')
 frag05_mean <- cellStats(frag05, stat = 'mean')
 frag10_mean <- cellStats(frag10, stat = 'mean')
 frag14_mean <- cellStats(frag14, stat = 'mean')
+
+# calculate the mean fragmentation in Madagascar forests nationally (raster stack)
+
+frag_stack_mean <- cellStats(frag_stack, 'mean') #takes some time
+
+frag_mean <- data.frame(frag_stack_mean) #convert to data frame
+frag_mean$raster_year <- row.names(frag_mean) # add rownames as column
+frag_mean <- rename(frag_mean,
+                         national_frag_mean = frag_stack_mean)  #rename column
+frag_mean$year <- c(1990,2000,2005,2010,2014) #check order
+
 
 frag_madagascar <- c(frag90_mean, frag00_mean, frag05_mean, frag10_mean, frag14_mean) %>%
   as.data.frame()
