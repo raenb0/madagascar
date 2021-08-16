@@ -40,20 +40,6 @@ forest_stack_30m <- list.files("data/forest/", pattern = "*.tif$", full.names = 
   stack()
 
 
-# forest fragmentation (density) in each time period (resolution: 30 x 30)
-
-frag90 <- raster("data/fragmentation/fordens1990.tif")
-frag00 <- raster("data/fragmentation/fordens2000.tif")
-frag05 <- raster("data/fragmentation/fordens2005.tif")
-frag10 <- raster("data/fragmentation/fordens2010.tif")
-frag14 <- raster("data/fragmentation/fordens2014.tif")
-
-# fragmentation as a raster stack
-
-frag_stack <- list.files("data/fragmentation/", pattern = "*.tif$", full.names = TRUE) %>%
- stack()
-
-
 # forest masked to pre-2005 CFM areas (resolution: 30 x 30)
 #note I left out pre-05 from object names
 
@@ -107,6 +93,59 @@ pa_for14_90m <- raster("data/pa_forest_90m/PA_for14_90m.tif")
 pa_forest_stack_90m <- list.files("data/pa_forest_90m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
+
+# forest fragmentation (density) in each time period (resolution: 30 x 30)
+
+frag90 <- raster("data/fragmentation/fordens1990.tif")
+frag00 <- raster("data/fragmentation/fordens2000.tif")
+frag05 <- raster("data/fragmentation/fordens2005.tif")
+frag10 <- raster("data/fragmentation/fordens2010.tif")
+frag14 <- raster("data/fragmentation/fordens2014.tif")
+
+# fragmentation as a raster stack
+
+frag_stack <- list.files("data/fragmentation/", pattern = "*.tif$", full.names = TRUE) %>%
+  stack()
+
+# forest fragmentation (density) in 2005, 2010, 2014 (resolution: 90 x 90)
+
+frag05_90m <- raster("data/fragmentation/90m/fordens2005.tif")
+frag10_90m <- raster("data/fragmentation/90m/fordens2010.tif")
+frag14_90m <- raster("data/fragmentation/90m/fordens2014.tif")
+
+# forest fragmentation (density) in 2005, 2010, 2014, masked to CFM areas (resolution: 90 x 90)
+
+cfm_frag05_90m <- raster("data/fragmentation/90m/cfm_dens2005.tif")
+cfm_frag10_90m <- raster("data/fragmentation/90m/cfm_dens2010.tif")
+cfm_frag14_90m <- raster("data/fragmentation/90m/cfm_dens2014.tif")
+
+# forest fragmentation (density) in 2005, 2010, 2014, masked to PAs (resolution: 90 x 90)
+
+pa_frag05_90m <- raster("data/fragmentation/90m/pa_dens2005.tif")
+pa_frag10_90m <- raster("data/fragmentation/90m/pa_dens2010.tif")
+pa_frag14_90m <- raster("data/fragmentation/90m/pa_dens2014.tif")
+
+
+# distance from forest edge in 2005, 2010, 2014 (resolution: 90 x 90)
+
+edge05_90m  <- raster("data/distance_edge_90m/edge_05.tif")
+edge10_90m  <- raster("data/distance_edge_90m/edge_10.tif")
+edge14_90m  <- raster("data/distance_edge_90m/edge_14.tif")
+
+# distance from forest edge in 2005, 2010, 2014 masked to CFM areas (resolution: 90 x 90)
+
+cfm_edge05_90m  <- raster("data/distance_edge_90m/cfm_edge2005.tif")
+cfm_edge10_90m  <- raster("data/distance_edge_90m/cfm_edge2010.tif")
+cfm_edge14_90m  <- raster("data/distance_edge_90m/cfm_edge2014.tif")
+
+# distance from forest edge in 2005, 2010, 2014 masked to PAs (resolution: 90 x 90)
+
+pa_edge05_90m  <- raster("data/distance_edge_90m/pa_edge2005.tif")
+pa_edge10_90m  <- raster("data/distance_edge_90m/pa_edge2010.tif")
+pa_edge14_90m  <- raster("data/distance_edge_90m/pa_edge2014.tif")
+
+
+##STOPPED HERE##
 
 # Annual data (2000-2017)-----------------------------------------------------------
 
@@ -322,6 +361,8 @@ ggsave("./outputs/forest_trends_annual_pct.png", plot = forest_trends_plot)
 
 
 # Calculate trends in forest fragmentation in CFM and PAs (periodic) ---------------------
+## NOTE density data = intactness (0-100%), NOT fragmentation
+
 library(prioritizr)
 
 frag_cfm_mean <- fast_extract(frag_stack, cfm_pre05, fun = "mean") %>%
@@ -354,9 +395,17 @@ frag05_mean <- cellStats(frag05, stat = 'mean')
 frag10_mean <- cellStats(frag10, stat = 'mean')
 frag14_mean <- cellStats(frag14, stat = 'mean')
 
-# calculate the mean fragmentation in Madagascar forests nationally (raster stack)
+# calculate the standard deviation of fragmentation in Madagascar forests nationally
+frag90_sd <- cellStats(frag90, stat = 'sd')
+frag00_sd <- cellStats(frag00, stat = 'sd')
+frag05_sd <- cellStats(frag05, stat = 'sd')
+frag10_sd <- cellStats(frag10, stat = 'sd')
+frag14_sd <- cellStats(frag14, stat = 'sd')
+
+# calculate the mean and sd fragmentation nationally (raster stack)
 
 frag_stack_mean <- cellStats(frag_stack, 'mean') #takes some time
+frag_stack_sd <- cellStats(frag_stack, 'sd') #takes some time
 
 frag_mean <- data.frame(frag_stack_mean) #convert to data frame
 frag_mean$raster_year <- row.names(frag_mean) # add rownames as column
@@ -370,10 +419,6 @@ frag_madagascar <- c(frag90_mean, frag00_mean, frag05_mean, frag10_mean, frag14_
 frag_madagascar <- rename(frag_madagascar,
          frag_national = .)
 frag_madagascar$year <- c(1990,2000,2005,2010,2014) #add a column for year
-
-# try using a raster stack
-#frag_madagascar_mean <- cellStats(frag_stack, stat='mean') %>%
-#  as.data.frame()
 
 frag_means <- inner_join(frag_pa_cfm_means, frag_madagascar)
 
@@ -394,6 +439,50 @@ frag_means_plot <- ggplot(frag_means_reshape) +
 ggsave("./outputs/frag_means.png", plot = frag_means_plot)
 
 
+# calculate periodic fragmentation mean, median, and sd (90m)
+
+frag05_90m_mean <- cellStats(frag05_90m, stat = 'mean')
+frag10_90m_mean <- cellStats(frag10_90m, stat = 'mean')
+frag14_90m_mean <- cellStats(frag14_90m, stat = 'mean')
+
+frag05_90m_sd <- cellStats(frag05_90m, stat = 'sd')
+frag10_90m_sd <- cellStats(frag10_90m, stat = 'sd')
+frag14_90m_sd <- cellStats(frag14_90m, stat = 'sd')
+
+#frag05_90m_median <- cellStats(frag05_90m, stat = 'median') #doesn't work, look at terra
+#frag10_90m_median <- cellStats(frag10_90m, stat = 'median')
+#frag14_90m_median <- cellStats(frag14_90m, stat = 'median')
+
+cfm_frag05_90m_mean <- cellStats(cfm_frag05_90m, stat = 'mean')
+cfm_frag10_90m_mean <- cellStats(cfm_frag10_90m, stat = 'mean')
+cfm_frag14_90m_mean <- cellStats(cfm_frag14_90m, stat = 'mean')
+
+cfm_frag05_90m_sd <- cellStats(cfm_frag05_90m, stat = 'sd')
+cfm_frag10_90m_sd <- cellStats(cfm_frag10_90m, stat = 'sd')
+cfm_frag14_90m_sd <- cellStats(cfm_frag14_90m, stat = 'sd')
+
+pa_frag05_90m_mean <- cellStats(pa_frag05_90m, stat = 'mean')
+pa_frag10_90m_mean <- cellStats(pa_frag10_90m, stat = 'mean')
+pa_frag14_90m_mean <- cellStats(pa_frag14_90m, stat = 'mean')
+
+pa_frag05_90m_sd <- cellStats(pa_frag05_90m, stat = 'sd')
+pa_frag10_90m_sd <- cellStats(pa_frag10_90m, stat = 'sd')
+pa_frag14_90m_sd <- cellStats(pa_frag14_90m, stat = 'sd')
+
+# create data frame for fragmentation statistics
+
+frag_means_90m <- c(frag05_90m_mean, frag10_90m_mean, frag14_90m_mean) #create vector
+frag_sds_90m <- c(frag05_90m_sd, frag10_90m_sd, frag14_90m_sd)
+#frag_medians_90m <- c(frag05_90m_median, frag10_90m_median, frag14_90m_median)
+cfm_frag_means_90m <- c(cfm_frag05_90m_mean, cfm_frag10_90m_mean, cfm_frag14_90m_mean)
+cfm_frag_sds_90m <- c(cfm_frag05_90m_sd, cfm_frag10_90m_sd, cfm_frag14_90m_sd)
+pa_frag_means_90m <- c(pa_frag05_90m_mean, pa_frag10_90m_mean, pa_frag14_90m_mean)
+pa_frag_sds_90m <- c(pa_frag05_90m_sd, pa_frag10_90m_sd, pa_frag14_90m_sd)
+
+frag_stats_90m <-data.frame(frag_means_90m, frag_sds_90m, cfm_frag_means_90m, cfm_frag_sds_90m, pa_frag_means_90m, pa_frag_sds_90m, row.names = c(2005, 2010, 2014)) #create data frame
+
+#write to csv
+write.csv(frag_stats_90m, file = "./outputs/frag_stats_90m.csv")
 
 # load covariates -------------------------------------------------------
 
