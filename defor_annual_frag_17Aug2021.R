@@ -26,7 +26,7 @@ cfm_pre05 <- read_sf("data/cfm_pa/CFM_pre05_UTM.shp")
 
 # Periodic data (1990, 2000, 2005, 2010, 2014) -----------------------------------------
 
-# total forest area in each time period (resolution: 30 x 30)
+# Load total forest area in each time period (resolution: 30 x 30)
 
 for90 <- raster("data/forest/for1990.tif")
 for00 <- raster("data/forest/for2000.tif")
@@ -54,7 +54,7 @@ cfm_for14 <- raster("data/cfm_forest_30m/cfm_p05_for14.tif")
 cfm_forest_stack_30m <- list.files("data/cfm_forest_30m/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
-# forest masked to pre-2005 CFM areas (resolution: 90 x 90)
+# load forest masked to pre-2005 CFM areas (resolution: 90 x 90)
 #note I left out pre-05 from object names
 
 cfm_for90_90m <- raster("data/cfm_forest_90m/cfm_for90_90m.tif")
@@ -94,36 +94,36 @@ pa_forest_stack_90m <- list.files("data/pa_forest_90m/", pattern = "*.tif$", ful
   stack()
 
 
-# forest fragmentation (density) in each time period (resolution: 30 x 30)
+# load forest density (intactness) in each time period (resolution: 30 x 30) ---------------
 
-frag90 <- raster("data/fragmentation/fordens1990.tif")
-frag00 <- raster("data/fragmentation/fordens2000.tif")
-frag05 <- raster("data/fragmentation/fordens2005.tif")
-frag10 <- raster("data/fragmentation/fordens2010.tif")
-frag14 <- raster("data/fragmentation/fordens2014.tif")
+dens90 <- raster("data/density/fordens1990.tif")
+dens00 <- raster("data/density/fordens2000.tif")
+dens05 <- raster("data/density/fordens2005.tif")
+dens10 <- raster("data/density/fordens2010.tif")
+dens14 <- raster("data/density/fordens2014.tif")
 
-# fragmentation as a raster stack
+# density as a raster stack
 
-frag_stack <- list.files("data/fragmentation/", pattern = "*.tif$", full.names = TRUE) %>%
+dens_stack <- list.files("data/density/", pattern = "*.tif$", full.names = TRUE) %>%
   stack()
 
-# forest fragmentation (density) in 2005, 2010, 2014 (resolution: 90 x 90)
+# forest density in 2005, 2010, 2014 (resolution: 90 x 90)
 
-frag05_90m <- raster("data/fragmentation/90m/fordens2005.tif")
-frag10_90m <- raster("data/fragmentation/90m/fordens2010.tif")
-frag14_90m <- raster("data/fragmentation/90m/fordens2014.tif")
+dens05_90m <- raster("data/density/90m/fordens2005.tif")
+dens10_90m <- raster("data/density/90m/fordens2010.tif")
+dens14_90m <- raster("data/density/90m/fordens2014.tif")
 
-# forest fragmentation (density) in 2005, 2010, 2014, masked to CFM areas (resolution: 90 x 90)
+# forest density in 2005, 2010, 2014, masked to CFM areas (resolution: 90 x 90)
 
-cfm_frag05_90m <- raster("data/fragmentation/90m/cfm_dens2005.tif")
-cfm_frag10_90m <- raster("data/fragmentation/90m/cfm_dens2010.tif")
-cfm_frag14_90m <- raster("data/fragmentation/90m/cfm_dens2014.tif")
+cfm_dens05_90m <- raster("data/density/90m/cfm_dens2005.tif")
+cfm_dens10_90m <- raster("data/density/90m/cfm_dens2010.tif")
+cfm_dens14_90m <- raster("data/density/90m/cfm_dens2014.tif")
 
-# forest fragmentation (density) in 2005, 2010, 2014, masked to PAs (resolution: 90 x 90)
+# forest density in 2005, 2010, 2014, masked to PAs (resolution: 90 x 90)
 
-pa_frag05_90m <- raster("data/fragmentation/90m/pa_dens2005.tif")
-pa_frag10_90m <- raster("data/fragmentation/90m/pa_dens2010.tif")
-pa_frag14_90m <- raster("data/fragmentation/90m/pa_dens2014.tif")
+pa_dens05_90m <- raster("data/density/90m/pa_dens2005.tif")
+pa_dens10_90m <- raster("data/density/90m/pa_dens2010.tif")
+pa_dens14_90m <- raster("data/density/90m/pa_dens2014.tif")
 
 
 # distance from forest edge in 2005, 2010, 2014 (resolution: 90 x 90)
@@ -358,134 +358,134 @@ forest_trends_pct_plot
 ggsave("./outputs/forest_trends_annual_pct.png", plot = forest_trends_plot)
 
 
-# Calculate trends in forest fragmentation in CFM and PAs (periodic) ---------------------
+# Calculate trends in forest density in CFM and PAs (periodic) ---------------------
 ## NOTE density data = intactness (0-100%), NOT fragmentation
 
 library(prioritizr)
 
-frag_cfm_mean <- fast_extract(frag_stack, cfm_pre05, fun = "mean") %>%
+dens_cfm_mean <- fast_extract(dens_stack, cfm_pre05, fun = "mean") %>%
   as.data.frame() %>%
-  setNames(names(frag_stack))
+  setNames(names(dens_stack))
 
-frag_pa <- fast_extract(frag_stack, protected_areas, fun = "mean") %>%
+dens_pa <- fast_extract(dens_stack, protected_areas, fun = "mean") %>%
   as.data.frame() %>%
-  setNames(names(frag_stack))
+  setNames(names(dens_stack))
 
-frag_pa_mean <- as.data.frame(colMeans(frag_pa)) #calculate mean across all PAs
-frag_pa_mean <- data.frame(year = row.names(frag_pa_mean), frag_pa_mean) #add rownames as column
-frag_cfm_mean <- as.data.frame(colMeans(frag_cfm_mean))
-frag_cfm_mean <- data.frame(year = row.names(frag_cfm_mean), frag_cfm_mean)
+dens_pa_mean <- as.data.frame(colMeans(dens_pa)) #calculate mean across all PAs
+dens_pa_mean <- data.frame(year = row.names(dens_pa_mean), dens_pa_mean) #add rownames as column
+dens_cfm_mean <- as.data.frame(colMeans(dens_cfm_mean))
+dens_cfm_mean <- data.frame(year = row.names(dens_cfm_mean), dens_cfm_mean)
 
-frag_pa_cfm_means <- inner_join(frag_pa_mean,frag_cfm_mean) #join PA and CFM data
+dens_pa_cfm_means <- inner_join(dens_pa_mean,dens_cfm_mean) #join PA and CFM data
 
-frag_pa_cfm_means <- rename(frag_pa_cfm_means, #rename columns
-                       frag_pa = colMeans.frag_pa.,
-                       frag_cfm_mean = colMeans.frag_cfm.)
+dens_pa_cfm_means <- rename(dens_pa_cfm_means, #rename columns
+                       dens_pa = colMeans.dens_pa.,
+                       dens_cfm_mean = colMeans.dens_cfm.)
 
-frag_pa_cfm_means$year<-gsub("fordens","",as.character(frag_pa_cfm_means$year)) #remove text "fordens" from "year" column
+dens_pa_cfm_means$year<-gsub("fordens","",as.character(dens_pa_cfm_means$year)) #remove text "fordens" from "year" column
 
-frag_pa_cfm_means$year <- as.numeric(frag_pa_cfm_means$year)
+dens_pa_cfm_means$year <- as.numeric(dens_pa_cfm_means$year)
 
-# calculate the mean fragmentation in Madagascar forests nationally
-frag90_mean <- cellStats(frag90, stat = 'mean')
-frag00_mean <- cellStats(frag00, stat = 'mean')
-frag05_mean <- cellStats(frag05, stat = 'mean')
-frag10_mean <- cellStats(frag10, stat = 'mean')
-frag14_mean <- cellStats(frag14, stat = 'mean')
+# calculate the mean density in Madagascar forests nationally
+dens90_mean <- cellStats(dens90, stat = 'mean')
+dens00_mean <- cellStats(dens00, stat = 'mean')
+dens05_mean <- cellStats(dens05, stat = 'mean')
+dens10_mean <- cellStats(dens10, stat = 'mean')
+dens14_mean <- cellStats(dens14, stat = 'mean')
 
-# calculate the standard deviation of fragmentation in Madagascar forests nationally
-frag90_sd <- cellStats(frag90, stat = 'sd')
-frag00_sd <- cellStats(frag00, stat = 'sd')
-frag05_sd <- cellStats(frag05, stat = 'sd')
-frag10_sd <- cellStats(frag10, stat = 'sd')
-frag14_sd <- cellStats(frag14, stat = 'sd')
+# calculate the standard deviation of density in Madagascar forests nationally
+dens90_sd <- cellStats(dens90, stat = 'sd')
+dens00_sd <- cellStats(dens00, stat = 'sd')
+dens05_sd <- cellStats(dens05, stat = 'sd')
+dens10_sd <- cellStats(dens10, stat = 'sd')
+dens14_sd <- cellStats(dens14, stat = 'sd')
 
-# calculate the mean and sd fragmentation nationally (raster stack)
+# calculate the mean and sd density nationally (raster stack)
 
-frag_stack_mean <- cellStats(frag_stack, 'mean') #takes some time
-frag_stack_sd <- cellStats(frag_stack, 'sd') #takes some time
+dens_stack_mean <- cellStats(dens_stack, 'mean') #takes some time
+dens_stack_sd <- cellStats(dens_stack, 'sd') #takes some time
 
-frag_mean <- data.frame(frag_stack_mean) #convert to data frame
-frag_mean$raster_year <- row.names(frag_mean) # add rownames as column
-frag_mean <- rename(frag_mean,
-                         national_frag_mean = frag_stack_mean)  #rename column
-frag_mean$year <- c(1990,2000,2005,2010,2014) #check order
+dens_mean <- data.frame(dens_stack_mean) #convert to data frame
+dens_mean$raster_year <- row.names(dens_mean) # add rownames as column
+dens_mean <- rename(dens_mean,
+                         national_dens_mean = dens_stack_mean)  #rename column
+dens_mean$year <- c(1990,2000,2005,2010,2014) #check order
 
 
-frag_madagascar <- c(frag90_mean, frag00_mean, frag05_mean, frag10_mean, frag14_mean) %>%
+dens_madagascar <- c(dens90_mean, dens00_mean, dens05_mean, dens10_mean, dens14_mean) %>%
   as.data.frame()
-frag_madagascar <- rename(frag_madagascar,
-         frag_national = .)
-frag_madagascar$year <- c(1990,2000,2005,2010,2014) #add a column for year
+dens_madagascar <- rename(dens_madagascar,
+         dens_national = .)
+dens_madagascar$year <- c(1990,2000,2005,2010,2014) #add a column for year
 
-frag_means <- inner_join(frag_pa_cfm_means, frag_madagascar)
+dens_means <- inner_join(dens_pa_cfm_means, dens_madagascar)
 
 #write to CSV file
-write.csv(frag_means, file = "./outputs/frag_means.csv")
+write.csv(dens_means, file = "./outputs/dens_means.csv")
 
-#plot fragmentation trends
+#plot density trends
 
 library(reshape2)
-frag_means_reshape = melt(frag_means, id=c("year")) #reshape data
+dens_means_reshape = melt(dens_means, id=c("year")) #reshape data
 
-frag_means_plot <- ggplot(frag_means_reshape) + 
+dens_means_plot <- ggplot(dens_means_reshape) + 
   geom_line(aes(x=year, y=value, colour=variable)) +
   geom_point(aes(x=year, y=value, colour=variable)) +
   scale_colour_manual(values=c("red","blue", "green"))  +
   ylab("Mean forest intactness (%)")
 
-ggsave("./outputs/frag_means.png", plot = frag_means_plot)
+ggsave("./outputs/dens_means.png", plot = dens_means_plot)
 
 
-# calculate periodic fragmentation mean, median, and sd (90m)------------------
+# calculate periodic density mean, median, and sd (90m)------------------
 
-frag05_90m_mean <- cellStats(frag05_90m, stat = 'mean')
-frag10_90m_mean <- cellStats(frag10_90m, stat = 'mean')
-frag14_90m_mean <- cellStats(frag14_90m, stat = 'mean')
+dens05_90m_mean <- cellStats(dens05_90m, stat = 'mean')
+dens10_90m_mean <- cellStats(dens10_90m, stat = 'mean')
+dens14_90m_mean <- cellStats(dens14_90m, stat = 'mean')
 
-frag05_90m_sd <- cellStats(frag05_90m, stat = 'sd')
-frag10_90m_sd <- cellStats(frag10_90m, stat = 'sd')
-frag14_90m_sd <- cellStats(frag14_90m, stat = 'sd')
+dens05_90m_sd <- cellStats(dens05_90m, stat = 'sd')
+dens10_90m_sd <- cellStats(dens10_90m, stat = 'sd')
+dens14_90m_sd <- cellStats(dens14_90m, stat = 'sd')
 
-#frag05_90m_median <- cellStats(frag05_90m, stat = 'median') #doesn't work, look at terra
-#frag10_90m_median <- cellStats(frag10_90m, stat = 'median')
-#frag14_90m_median <- cellStats(frag14_90m, stat = 'median')
+#dens05_90m_median <- cellStats(dens05_90m, stat = 'median') #doesn't work, look at terra
+#dens10_90m_median <- cellStats(dens10_90m, stat = 'median')
+#dens14_90m_median <- cellStats(dens14_90m, stat = 'median')
 
-cfm_frag05_90m_mean <- cellStats(cfm_frag05_90m, stat = 'mean')
-cfm_frag10_90m_mean <- cellStats(cfm_frag10_90m, stat = 'mean')
-cfm_frag14_90m_mean <- cellStats(cfm_frag14_90m, stat = 'mean')
+cfm_dens05_90m_mean <- cellStats(cfm_dens05_90m, stat = 'mean')
+cfm_dens10_90m_mean <- cellStats(cfm_dens10_90m, stat = 'mean')
+cfm_dens14_90m_mean <- cellStats(cfm_dens14_90m, stat = 'mean')
 
-cfm_frag05_90m_sd <- cellStats(cfm_frag05_90m, stat = 'sd')
-cfm_frag10_90m_sd <- cellStats(cfm_frag10_90m, stat = 'sd')
-cfm_frag14_90m_sd <- cellStats(cfm_frag14_90m, stat = 'sd')
+cfm_dens05_90m_sd <- cellStats(cfm_dens05_90m, stat = 'sd')
+cfm_dens10_90m_sd <- cellStats(cfm_dens10_90m, stat = 'sd')
+cfm_dens14_90m_sd <- cellStats(cfm_dens14_90m, stat = 'sd')
 
-pa_frag05_90m_mean <- cellStats(pa_frag05_90m, stat = 'mean')
-pa_frag10_90m_mean <- cellStats(pa_frag10_90m, stat = 'mean')
-pa_frag14_90m_mean <- cellStats(pa_frag14_90m, stat = 'mean')
+pa_dens05_90m_mean <- cellStats(pa_dens05_90m, stat = 'mean')
+pa_dens10_90m_mean <- cellStats(pa_dens10_90m, stat = 'mean')
+pa_dens14_90m_mean <- cellStats(pa_dens14_90m, stat = 'mean')
 
-pa_frag05_90m_sd <- cellStats(pa_frag05_90m, stat = 'sd')
-pa_frag10_90m_sd <- cellStats(pa_frag10_90m, stat = 'sd')
-pa_frag14_90m_sd <- cellStats(pa_frag14_90m, stat = 'sd')
+pa_dens05_90m_sd <- cellStats(pa_dens05_90m, stat = 'sd')
+pa_dens10_90m_sd <- cellStats(pa_dens10_90m, stat = 'sd')
+pa_dens14_90m_sd <- cellStats(pa_dens14_90m, stat = 'sd')
 
 # check min and max values to see why SD are so large
 
-frag05_90m_min <- cellStats(frag05_90m, stat = 'min') #min 
-frag05_90m_max <- cellStats(frag05_90m, stat = 'max') #max 
+dens05_90m_min <- cellStats(dens05_90m, stat = 'min') #min 
+dens05_90m_max <- cellStats(dens05_90m, stat = 'max') #max 
 
-# create data frame for fragmentation statistics
+# create data frame for density statistics
 
-frag_means_90m <- c(frag05_90m_mean, frag10_90m_mean, frag14_90m_mean) #create vector
-frag_sds_90m <- c(frag05_90m_sd, frag10_90m_sd, frag14_90m_sd)
-#frag_medians_90m <- c(frag05_90m_median, frag10_90m_median, frag14_90m_median)
-cfm_frag_means_90m <- c(cfm_frag05_90m_mean, cfm_frag10_90m_mean, cfm_frag14_90m_mean)
-cfm_frag_sds_90m <- c(cfm_frag05_90m_sd, cfm_frag10_90m_sd, cfm_frag14_90m_sd)
-pa_frag_means_90m <- c(pa_frag05_90m_mean, pa_frag10_90m_mean, pa_frag14_90m_mean)
-pa_frag_sds_90m <- c(pa_frag05_90m_sd, pa_frag10_90m_sd, pa_frag14_90m_sd)
+dens_means_90m <- c(dens05_90m_mean, dens10_90m_mean, dens14_90m_mean) #create vector
+dens_sds_90m <- c(dens05_90m_sd, dens10_90m_sd, dens14_90m_sd)
+#dens_medians_90m <- c(dens05_90m_median, dens10_90m_median, dens14_90m_median)
+cfm_dens_means_90m <- c(cfm_dens05_90m_mean, cfm_dens10_90m_mean, cfm_dens14_90m_mean)
+cfm_dens_sds_90m <- c(cfm_dens05_90m_sd, cfm_dens10_90m_sd, cfm_dens14_90m_sd)
+pa_dens_means_90m <- c(pa_dens05_90m_mean, pa_dens10_90m_mean, pa_dens14_90m_mean)
+pa_dens_sds_90m <- c(pa_dens05_90m_sd, pa_dens10_90m_sd, pa_dens14_90m_sd)
 
-frag_stats_90m <-data.frame(frag_means_90m, frag_sds_90m, cfm_frag_means_90m, cfm_frag_sds_90m, pa_frag_means_90m, pa_frag_sds_90m, row.names = c(2005, 2010, 2014)) #create data frame
+dens_stats_90m <-data.frame(dens_means_90m, dens_sds_90m, cfm_dens_means_90m, cfm_dens_sds_90m, pa_dens_means_90m, pa_dens_sds_90m, row.names = c(2005, 2010, 2014)) #create data frame
 
 #write to csv
-write.csv(frag_stats_90m, file = "./outputs/frag_stats_90m.csv")
+write.csv(dens_stats_90m, file = "./outputs/dens_stats_90m.csv")
 
 
 # calculate periodic distance to edge mean, median, and sd (90m)---------------
