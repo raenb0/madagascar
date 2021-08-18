@@ -469,8 +469,8 @@ pa_dens14_90m_sd <- cellStats(pa_dens14_90m, stat = 'sd')
 
 # check min and max values to see why SD are so large
 
-dens05_90m_min <- cellStats(dens05_90m, stat = 'min') #min 
-dens05_90m_max <- cellStats(dens05_90m, stat = 'max') #max 
+dens05_90m_min <- cellStats(dens05_90m, stat = 'min') #min forest density is 0
+dens05_90m_max <- cellStats(dens05_90m, stat = 'max') #max forest density is 100
 
 # create data frame for density statistics
 
