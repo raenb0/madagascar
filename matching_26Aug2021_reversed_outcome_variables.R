@@ -149,7 +149,7 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values
 
 #write to CSV
-write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_17Aug2021.csv') #update date
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_27Aug2021.csv') #update date
 
 # Define treatment
 # Ranaivo says: We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
@@ -201,8 +201,8 @@ wght <- c(m1$weights,m1$weights) # weights of the observations in the matched da
 
 #write to CSV *update date!
 
-write_csv(matched, 'outputs/mahalanobis_matched_12Jul2021.csv')
-write.csv(wght,'outputs/mahalanobis_wght_12Jul2021.csv') #note this outputs a table with only values of 1***
+write_csv(matched, 'outputs/mahalanobis_matched_27Aug2021.csv')
+write.csv(wght,'outputs/mahalanobis_wght_27Aug2021.csv') #note this outputs a table with only values of 1***
 
 
 
@@ -237,8 +237,8 @@ library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_12Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_12Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_27Aug2021.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_27Aug2021.csv')
 
 #add weights to matched dataset
 
@@ -265,22 +265,20 @@ w.matched$pop.2 <- w.matched$pop10
 w.matched$edge.1 <- w.matched$edge_05
 w.matched$edge.2 <- w.matched$edge_10
 
-## STOPPED HERE***
-
 #add change in forest density (fragmentation) variables **New addition July 12
 #this will return a 0 if there was no change in density % between 2005 and 2010, 
 #and 0-100 if there was change in density % from 2005 and 2010 
-# e.g. POSITIVE values indicate DECREASE in density
+# e.g. POSITIVE values indicate DECREASE in density (INCREASE in fragmentation)
 
-w.matched$dens.1 <- w.matched$fordens05-w.matched$fordens10
-w.matched$dens.2 <- w.matched$fordens10-w.matched$fordens14
+w.matched$frag.1 <- w.matched$fordens05-w.matched$fordens10
+w.matched$frag.2 <- w.matched$fordens10-w.matched$fordens14
 
 #Select desired variables, reorder columns
 
 names(w.matched)
 
 w.matched.subs <- w.matched %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg_type,  pop.1, pop.2, defor.1, defor.2, edge.1, edge.2, dens.1, dens.2)
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg_type,  pop.1, pop.2, defor.1, defor.2, edge.1, edge.2, frag.1, frag.2)
 
 #subset data to split up PA and CFM data
 
@@ -326,14 +324,14 @@ View(w.matched_bind)
 w.matched.reorg <- reshape(w.matched_bind,
                             idvar = "UID",
                             direction = "long",
-                            varying = c("pop.1", "pop.2", "defor.1", "defor.2", "edge.1", "edge.2", "dens.1", "dens.2")
+                            varying = c("pop.1", "pop.2", "defor.1", "defor.2", "edge.1", "edge.2", "frag.1", "frag.2")
                             )
 
 #View
 View(w.matched.reorg)
 
 #write to CSV
-write_csv(w.matched.reorg,'outputs/w.matched.reorg_18Aug2021.csv') #update date
+write_csv(w.matched.reorg,'outputs/w.matched.reorg_27Aug2021.csv') #update date
 
 
 
@@ -350,7 +348,7 @@ did_m1 <- plm(defor ~ CFM*time + pop + edge, data = w.matched.reorg, effect="two
 summary(did_m1)
 
 
-### SPECIFY THE TWO-PERIOD MODEL, FOREST DENSITY OUTCOME -------------------
+### SPECIFY THE TWO-PERIOD MODEL, FRAGMENTATION OUTCOME -------------------
 #outcome variable: FOREST DENSITY (so POSITIVE coefficients = MORE intact forest, I think)
 
 #load data if needed
@@ -358,7 +356,7 @@ w.matched.reorg <- read_csv('outputs/w.matched.reorg_18Aug2021.csv')
 
 library(plm)
 
-did_m2 <- plm(dens ~ CFM*time + pop + edge, data = w.matched.reorg, effect="twoways", model = "within", index = c("UID", "time"))
+did_m2 <- plm(frag ~ CFM*time + pop + edge, data = w.matched.reorg, effect="twoways", model = "within", index = c("UID", "time"))
 
 summary(did_m2)
 
@@ -371,8 +369,8 @@ library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_12Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_12Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_27Aug2021.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_27Aug2021.csv')
 
 #add weights to matched dataset
 
@@ -461,7 +459,7 @@ w_matched_yr_reorg <- rename(w_matched_yr_reorg,
 View(w_matched_yr_reorg)
 
 #write to CSV
-write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_12Jul2021c.csv') #update date
+write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_27Aug2021.csv') #update date
 
 
 ### SPECIFY THE ANNUAL MODEL -------------------
