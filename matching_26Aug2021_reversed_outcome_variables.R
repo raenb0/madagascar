@@ -205,31 +205,6 @@ write_csv(matched, 'outputs/mahalanobis_matched_27Aug2021.csv')
 write.csv(wght,'outputs/mahalanobis_wght_27Aug2021.csv') #note this outputs a table with only values of 1***
 
 
-
-### GENETIC MATCHING ###  (TAKES >63 HRS TO RUN)-------------------------
-
-#library(rgenoud)
-
-## SPECIFYING THE MATCHING
-#gen1 <- GenMatch(Tr=Treat, X=covs, pop.size= 500, exact= Ex, replace=TRUE, ties= TRUE) #took >63 hrs to run
-#mgen1 <- Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE, exact=Ex, replace=TRUE, ties=TRUE, Weight.matrix= gen1)
-
-## CHECK COVARIATE BALANCE
-#mb2 <- MatchBalance(Treat ~ elev + dist_road + dist_cart + dist_urb + dist_vil + precip + slope + pop00 + DVSP + veg,
-#                    match.out = mgen1, nboots = 500, data=cfm_pa_data_90m_no_na) 
-
-## MATCHED DATASET TO BE USED FOR THE DIFFERENCE IN DIFFERENCE (DID) ANALYSIS 
-
-#gen.matched <- rbind(cfm_pa_data_90m_no_na[mgen1$index.treated,],cfm_pa_data_90m_no_na[mgen1$index.control,]) # this is the matched dataset
-#gen.wght <- c(mgen1$weights,mgen1$weights)# weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
-
-#WRITE TO CSV (Ranaivo says not to bother)
-
-#write.csv(gen.matched,'outputs/genetic_matched.csv')
-#write.csv(gen.wght,'outputs/genetic_wght.csv')
-
-
-
 ## REORGANIZE MAHALANOBIS MATCHED DATA FOR TWO-PERIOD ANALYSIS -----------------------
 
 library(tidyverse)
@@ -339,7 +314,7 @@ write_csv(w.matched.reorg,'outputs/w.matched.reorg_27Aug2021.csv') #update date
 #outcome variable: DEFORESTATION (so POSITIVE coefficients = MORE deforestation, I think)
 
 #load data if needed
-w.matched.reorg <- read_csv('outputs/w.matched.reorg_18Aug2021.csv')  
+w.matched.reorg <- read_csv('outputs/w.matched.reorg_27Aug2021.csv')  #update date
 
 library(plm)
 
@@ -352,7 +327,7 @@ summary(did_m1)
 #outcome variable: FOREST DENSITY (so POSITIVE coefficients = MORE intact forest, I think)
 
 #load data if needed
-w.matched.reorg <- read_csv('outputs/w.matched.reorg_18Aug2021.csv')  
+w.matched.reorg <- read_csv('outputs/w.matched.reorg_27Aug2021.csv')  #update date
 
 library(plm)
 
@@ -466,7 +441,7 @@ write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_27Aug2021.csv') #update
 #outcome variable: FOREST COVER, so POSITIVE coefficients indicate MORE forest cover (LESS deforestation), I think
 
 #load data if needed
-w_matched_yr_reorg <- read_csv('outputs/w_matched_yr_reorg_9Jul2021b.csv')  
+w_matched_yr_reorg <- read_csv('outputs/w_matched_yr_reorg_27Aug2021.csv') #update date  
 
 library(plm)
 
