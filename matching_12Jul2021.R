@@ -149,7 +149,7 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values
 
 #write to CSV
-write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_12Jul2021.csv') #update date
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_17Aug2021.csv') #update date
 
 # Define treatment
 # Ranaivo says: We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
