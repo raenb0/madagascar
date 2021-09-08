@@ -261,6 +261,11 @@ forest_madagascar_sum$year<-gsub("_90m","",as.character(forest_madagascar_sum$ye
 
 forest_madagascar_sum$year <- as.numeric(forest_madagascar_sum$year)
 
+# convert to square kilometers
+# each 90m pixel = 90*90 = 8100 sq m = 8.1 sq km (multiply by 8100 and divide by 1000)
+forest_madagascar_sum$forest_sq_km <- forest_madagascar_sum$forest_sum*8.1
+
+
 #calculate annual forest cover as a percent of 1990 forest cover (baseline)
 
 forest_madagascar_pct <- data.frame(year=forest_madagascar_sum$year,
@@ -269,8 +274,8 @@ forest_madagascar_pct <- data.frame(year=forest_madagascar_sum$year,
 View(forest_madagascar_pct)
 
 #write to CSV files
-write.csv(forest_madagascar_sum, file = "./outputs/forest_madagascar_sum.csv")
-write.csv(forest_madagascar_pct, file = "./outputs/forest_madagascar_pct.csv")
+write.csv(forest_madagascar_sum, file = "./outputs/forest_madagascar_sum_27Aug2021.csv") #update date
+write.csv(forest_madagascar_pct, file = "./outputs/forest_madagascar_pct_27Aug2021.csv")
 
 #plot
 
@@ -328,6 +333,13 @@ forest_pa_cfm_sum$year <- as.numeric(forest_pa_cfm_sum$year)
 
 View(forest_pa_cfm_sum)
 
+#convert to sq km (90*90 = 8100 sq m, divide by 1000)
+forest_pa_cfm_sum$forest_pa_sq_km <- forest_pa_cfm_sum$forest_pa*8.1
+forest_pa_cfm_sum$forest_cfm_sq_km <- forest_pa_cfm_sum$forest_cfm*8.1
+
+#write to CSV files
+write.csv(forest_pa_cfm_sum, file = "./outputs/forest_pa_cfm_sum_27Aug2021.csv") #update date
+
 #calculate pa and cfm forest cover as a percent of 2000 forest cover (baseline)
 
 forest_pa_cfm_pct <- data.frame(year=forest_pa_cfm_sum$year,
@@ -337,11 +349,28 @@ forest_pa_cfm_pct <- data.frame(year=forest_pa_cfm_sum$year,
 
 View(forest_pa_cfm_pct)
 
+#write to CSV file
+write.csv(forest_pa_cfm_pct, file = "./outputs/forest_pa_cfm_pct_27Aug2021.csv") #update date
+
+
+#join national, pa and cfm forest sum tables
+
+forest_trends_annual_sum <- inner_join(forest_madagascar_sum, forest_pa_cfm_sum, by="year")
+
+View(forest_trends_annual_sum)
+
+#write to CSV files
+write.csv(forest_trends_annual_sum, file = "./outputs/forest_trends_annual_sum_27Aug2021.csv") #update date
+
+
 #join national, pa and cfm forest pct tables
 
 forest_trends_annual_pct <- inner_join(forest_madagascar_pct, forest_pa_cfm_pct, by="year")
 
 View(forest_trends_annual_pct)
+
+#write to CSV files
+write.csv(forest_trends_annual_pct, file = "./outputs/forest_trends_annual_pct_27Aug2021.csv") #update date
 
 library(reshape2)
 
