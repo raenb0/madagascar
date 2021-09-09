@@ -351,12 +351,11 @@ summary(did_m1)
 #### CLUSTERED SE -------------------
 #code adapted from Ranaivo
 
-
 #add a new alphanumeric variable: "cluster" with the format cfm00pa00
 names(w.matched.reorg)
 w.matched.reorg$cluster <- do.call(paste0, c("cfm", w.matched.reorg["cfm_id"], "pa", w.matched.reorg["pa_id"]))
 
-V_CR2 <- vcovCR(did_m1, cluster=w.matched.reorg$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data
+V_CR2 <- vcovCR(did_m1, cluster=w.matched.reorg$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data #didn't work: Error: cannot allocate vector of size 3.7 Gb
 
 coef_test(did_m1, vcov=V_CR2, test="Satterthwaite") # p-values #also took a long time to run
 conf_int(did_m1, vcov=V_CR2, test="Satterthwaite") # 95% CI. I personally prefer presenting CI because of all the controversies surrounding p-values
