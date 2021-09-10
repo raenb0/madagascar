@@ -355,6 +355,8 @@ summary(did_m1)
 names(w.matched.reorg)
 w.matched.reorg$cluster <- do.call(paste0, c("cfm", w.matched.reorg["cfm_id"], "pa", w.matched.reorg["pa_id"]))
 
+memory.limit(size=5000000)
+
 V_CR2 <- vcovCR(did_m1, cluster=w.matched.reorg$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data #didn't work: Error: cannot allocate vector of size 3.7 Gb
 
 coef_test(did_m1, vcov=V_CR2, test="Satterthwaite") # p-values #also took a long time to run
