@@ -29,6 +29,12 @@ pa_90m_data <- read_csv("data/sample_points/pa05_90m_data.csv")
 names(cfm_90m_data) #get variable names
 
 cfm_90m_data <- rename(cfm_90m_data,
+                       cfm_id = cfmid,
+                       dist_cart = distcart,
+                       dist_road = distroad,
+                       dist_urb = disturb,
+                       dist_vil = distvil,
+                       edge_05 = edge05,
                        elev = elevmsk,
                        for2000 = for200090m,
                        for2001 = for200190m,
@@ -48,6 +54,8 @@ cfm_90m_data <- rename(cfm_90m_data,
                        for2015 = for201590m,
                        for2016 = for201690m,
                        for2017 = for201790m,
+                       pa_id = paid,
+                       precip = precyr,
                        pop05 = mdgpd2005,
                        pop06 = mdgpd2006,
                        pop07 = mdgpd2007,
@@ -62,7 +70,7 @@ cfm_90m_data <- rename(cfm_90m_data,
                        pop16 = mdgpd2016,
                        pop17 = mdgpd2017,
                        rice = ricethr,
-                       precip = precyr) 
+                       veg_type = vegtype) 
 
 
 names(cfm_90m_data) #check if renaming worked
@@ -72,38 +80,48 @@ names(cfm_90m_data) #check if renaming worked
 names(pa_90m_data) #get variable names
 
 pa_90m_data <- rename(pa_90m_data,
-                      elev = elev_msk,
-                      for2000 = for_2000_9,
-                      for2001 = for_2001_9,
-                      for2002 = for_2002_9,
-                      for2003 = for_2003_9,
-                      for2004 = for_2004_9,
-                      for2005 = for_2005_9,
-                      for2006 = for_2006_9,
-                      for2007 = for_2007_9,
-                      for2008 = for_2008_9,
-                      for2009 = for_2009_9,
-                      for2010 = for_2010_9,
-                      for2011 = for_2011_9,
-                      for2012 = for_2012_9,
-                      for2013 = for_2013_9,
-                      for2014 = for_2014_9,
-                      for2015 = for_2015_9,
-                      for2016 = for_2016_9,
-                      for2017 = for_2017_9,
-                      pop03 = Y2003,
-                      pop04 = Y2004,
-                      pop05 = Y2005,
-                      pop06 = Y2006,
-                      pop07 = Y2007,
-                      pop08 = Y2008,
-                      pop09 = Y2009,
-                      pop10 = Y2010,
-                      pop11 = Y2011,
-                      pop12 = Y2012,
-                      pop13 = Y2013,
-                      rice = rice_thr,
-                      precip = prec_yr)
+                      cfm_id = cfmid,
+                      dist_cart = distcart,
+                      dist_road = distroad,
+                      dist_urb = disturb,
+                      dist_vil = distvil,
+                      edge_05 = edge05,
+                      elev = elevmsk,
+                      for2000 = for200090m,
+                      for2001 = for200190m,
+                      for2002 = for200290m,
+                      for2003 = for200390m,
+                      for2004 = for200490m,
+                      for2005 = for200590m,
+                      for2006 = for200690m,
+                      for2007 = for200790m,
+                      for2008 = for200890m,
+                      for2009 = for200990m,
+                      for2010 = for201090m,
+                      for2011 = for201190m,
+                      for2012 = for201290m,
+                      for2013 = for201390m,
+                      for2014 = for201490m,
+                      for2015 = for201590m,
+                      for2016 = for201690m,
+                      for2017 = for201790m,
+                      pa_id = paid,
+                      precip = precyr,
+                      pop05 = mdgpd2005,
+                      pop06 = mdgpd2006,
+                      pop07 = mdgpd2007,
+                      pop08 = mdgpd2008,
+                      pop09 = mdgpd2009,
+                      pop10 = mdgpd2010,
+                      pop11 = mdgpd2011,
+                      pop12 = mdgpd2012,
+                      pop13 = mdgpd2013,
+                      pop14 = mdgpd2014,
+                      pop15 = mdgpd2015,
+                      pop16 = mdgpd2016,
+                      pop17 = mdgpd2017,
+                      rice = ricethr,
+                      veg_type = vegtype)
 
 names(pa_90m_data) #check if renaming worked
 
@@ -148,10 +166,11 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 
 #cfm_pa_data_90m <- cfm_pa_data_90m %>% dplyr::select(-InclProb) #dropped first variable (InclProb) 
 
-cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values
+cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values **SKIPPED THIS STEP, MIGHT CAUSE ISSUES
 
 #write to CSV
-write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_17Aug2021.csv') #update date
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_17Mar2022.csv') #update date
+#write_csv(cfm_pa_data_90m,'outputs/cfm_pa_data_90m_17Mar2022.csv') #version with NA values
 
 # Define treatment
 # Ranaivo says: We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
