@@ -493,6 +493,10 @@ w_matched_yr_wider <- w_matched_yr_longer %>%
 #View
 View(w_matched_yr_wider) #WORKED!
 
+#rename "for" to "forest" because this causes problems later
+w_matched_yr_wider <- rename(w_matched_yr_wider,
+                       forest = "for")
+
 #write to CSV
 write_csv(w_matched_yr_wider,'outputs/w_matched_yr_wider_17Mar2022.csv') #update date
 
@@ -517,7 +521,7 @@ w_matched_yr_wider$time <- w_matched_yr_wider$year - 2004
 
 View(w_matched_yr_wider)
 
-did_m1_yr <- plm(for ~ CFM*time + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "time")) #note I am not sure if I can use "year" instead of "time"
+did_m1_yr <- plm(forest ~ CFM*year + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #do I need to include CFM + time individually as well as the interaction term?
 
 summary(did_m1_yr)
 
