@@ -222,8 +222,8 @@ wght <- c(m1$weights,m1$weights) # weights of the observations in the matched da
 
 #write to CSV *update date!
 
-write_csv(matched, 'outputs/mahalanobis_matched_12Jul2021.csv')
-write.csv(wght,'outputs/mahalanobis_wght_12Jul2021.csv') #note this outputs a table with only values of 1***
+write_csv(matched, 'outputs/mahalanobis_matched_17Mar2022.csv') #update date
+write.csv(wght,'outputs/mahalanobis_wght_17Mar2022.csv') #note this outputs a table with only values of 1***
 
 
 
@@ -258,8 +258,8 @@ library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_12Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_12Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_17Mar2022.csv')  #update dates
+wght <- read_csv('outputs/mahalanobis_wght_17Mar2022.csv')
 
 #add weights to matched dataset
 
@@ -398,53 +398,96 @@ summary(did_m2)
 
 
 
-## REORGANIZE MAHALANOBIS MATCHED DATA FOR ANNUAL ANALYSIS -----------------------
+
+
+## REORGANIZE MAHALANOBIS MATCHED DATA FOR ANNUAL ANALYSIS -----------------------##updated March 17 2022
 
 library(tidyverse)
 library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/mahalanobis_matched_12Jul2021.csv')  #update dates
-wght <- read_csv('outputs/mahalanobis_wght_12Jul2021.csv')
+matched <- read_csv('outputs/mahalanobis_matched_17Mar2022.csv')  #update dates
+#wght <- read_csv('outputs/mahalanobis_wght_17Mar2022.csv') #unnecessary
 
-#add weights to matched dataset
+#add weights to matched dataset ##unnecessary
 
-w_matched_yr <- data.frame(matched, wght)
+w_matched_yr <- data.frame(matched)#, wght)
 
-#add new columns for annual forest cover
+#add new columns for annual forest cover #unnecessary
 
-w_matched_yr$for.1 <- w_matched_yr$for2005
-w_matched_yr$for.2 <- w_matched_yr$for2006
-w_matched_yr$for.3 <- w_matched_yr$for2007
-w_matched_yr$for.4 <- w_matched_yr$for2008
-w_matched_yr$for.5 <- w_matched_yr$for2009
-w_matched_yr$for.6 <- w_matched_yr$for2010
-w_matched_yr$for.7 <- w_matched_yr$for2011
-w_matched_yr$for.8 <- w_matched_yr$for2012
-w_matched_yr$for.9 <- w_matched_yr$for2013
+# w_matched_yr$for.2005 <- w_matched_yr$for2005
+# w_matched_yr$for.2006 <- w_matched_yr$for2006
+# w_matched_yr$for.2007 <- w_matched_yr$for2007
+# w_matched_yr$for.2008 <- w_matched_yr$for2008
+# w_matched_yr$for.2009 <- w_matched_yr$for2009
+# w_matched_yr$for.2010 <- w_matched_yr$for2010
+# w_matched_yr$for.2011 <- w_matched_yr$for2011
+# w_matched_yr$for.2012 <- w_matched_yr$for2012
+# w_matched_yr$for.2013 <- w_matched_yr$for2013
+# w_matched_yr$for.2014 <- w_matched_yr$for2014
+# w_matched_yr$for.2015 <- w_matched_yr$for2015
+# w_matched_yr$for.2016 <- w_matched_yr$for2016
+# w_matched_yr$for.2017 <- w_matched_yr$for2017
 
-#add population variables 
+#add (renamed) population variables #necessary for renaming years
 #Ranaivo says: It is better to use the pop at the beginning of the periods 
 #(i.e., in 2005 for period 1 and 2010 for period 2) than the difference
 
-w_matched_yr$pop.1 <- w_matched_yr$pop05
-w_matched_yr$pop.2 <- w_matched_yr$pop06
-w_matched_yr$pop.3 <- w_matched_yr$pop07
-w_matched_yr$pop.4 <- w_matched_yr$pop08
-w_matched_yr$pop.5 <- w_matched_yr$pop09
-w_matched_yr$pop.6 <- w_matched_yr$pop10
-w_matched_yr$pop.7 <- w_matched_yr$pop11
-w_matched_yr$pop.8 <- w_matched_yr$pop12
-w_matched_yr$pop.9 <- w_matched_yr$pop13
+w_matched_yr$pop2005 <- w_matched_yr$pop05
+w_matched_yr$pop2006 <- w_matched_yr$pop06
+w_matched_yr$pop2007 <- w_matched_yr$pop07
+w_matched_yr$pop2008 <- w_matched_yr$pop08
+w_matched_yr$pop2009 <- w_matched_yr$pop09
+w_matched_yr$pop2010 <- w_matched_yr$pop10
+w_matched_yr$pop2011 <- w_matched_yr$pop11
+w_matched_yr$pop2012 <- w_matched_yr$pop12
+w_matched_yr$pop2013 <- w_matched_yr$pop13
+w_matched_yr$pop2014 <- w_matched_yr$pop14
+w_matched_yr$pop2015 <- w_matched_yr$pop15
+w_matched_yr$pop2016 <- w_matched_yr$pop16
+w_matched_yr$pop2017 <- w_matched_yr$pop17
 
+#add rice price (average) variable
+
+# w_matched_yr$riceavg.2005 <- w_matched_yr$riceavg2005
+# w_matched_yr$riceavg.2006 <- w_matched_yr$riceavg2006
+# w_matched_yr$riceavg.2007 <- w_matched_yr$riceavg2007
+# w_matched_yr$riceavg.2008 <- w_matched_yr$riceavg2008
+# w_matched_yr$riceavg.2009 <- w_matched_yr$riceavg2009
+# w_matched_yr$riceavg.2010 <- w_matched_yr$riceavg2010
+# w_matched_yr$riceavg.2011 <- w_matched_yr$riceavg2011
+# w_matched_yr$riceavg.2012 <- w_matched_yr$riceavg2012
+# w_matched_yr$riceavg.2013 <- w_matched_yr$riceavg2013
+# w_matched_yr$riceavg.2014 <- w_matched_yr$riceavg2014
+# w_matched_yr$riceavg.2015 <- w_matched_yr$riceavg2015
+# w_matched_yr$riceavg.2016 <- w_matched_yr$riceavg2016
+# w_matched_yr$riceavg.2017 <- w_matched_yr$riceavg2017
+
+#add rice price (standard deviation) variable
+
+# w_matched_yr$ricesd.2005 <- w_matched_yr$ricesd2005
+# w_matched_yr$ricesd.2006 <- w_matched_yr$ricesd2006
+# w_matched_yr$ricesd.2007 <- w_matched_yr$ricesd2007
+# w_matched_yr$ricesd.2008 <- w_matched_yr$ricesd2008
+# w_matched_yr$ricesd.2009 <- w_matched_yr$ricesd2009
+# w_matched_yr$ricesd.2010 <- w_matched_yr$ricesd2010
+# w_matched_yr$ricesd.2011 <- w_matched_yr$ricesd2011
+# w_matched_yr$ricesd.2012 <- w_matched_yr$ricesd2012
+# w_matched_yr$ricesd.2013 <- w_matched_yr$ricesd2013
+# w_matched_yr$ricesd.2014 <- w_matched_yr$ricesd2014
+# w_matched_yr$ricesd.2015 <- w_matched_yr$ricesd2015
+# w_matched_yr$ricesd.2016 <- w_matched_yr$ricesd2016
+# w_matched_yr$ricesd.2017 <- w_matched_yr$ricesd2017
 
 #Select desired variables, reorder columns
 
 names(w_matched_yr)
 
 w_matched_yr_subs <- w_matched_yr %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge_10, edge_14,fordens05, fordens10, fordens14, elev, rice, precip, slope, veg_type,  pop.1:pop.9, for.1:for.9)
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, pop2005:pop2017, riceavg2005:riceavg2017, ricesd2005:ricesd2017) #note edge_10 and edge_14 were renamed edge10 and edge14
+
+names(w_matched_yr_subs)
 
 #subset data to split up PA and CFM data
 
@@ -470,43 +513,67 @@ PA_data_yr$UID <- do.call(paste0, PA_data_yr[c("PA_CFM", "ID")])
 CFM_data_yr$UID <- do.call(paste0, CFM_data_yr[c("PA_CFM", "ID")])
 
 #check to make sure they look ok
-View(PA_data_yr)
-View(CFM_data_yr)
+#View(PA_data_yr)
+#View(CFM_data_yr)
 
 #join the tables back together
 w_matched_yr_bind <- rbind(PA_data_yr, CFM_data_yr)
 View(w_matched_yr_bind)
 
-# reorganize (this works, but returns columns with names "p" (pop) and "r" (for)
-w_matched_yr_reorg <- w_matched_yr_bind %>%
+# reorganize 
+
+#(this works, but returns columns with names "p" (pop) and "r" (for) and "c" (rice??)
+# w_matched_yr_reorg <- w_matched_yr_bind %>%
+#   pivot_longer(
+#     cols = for.2005:for.2017,
+#     names_to = c(".value", "year"),
+#     names_prefix = "(.).",
+#     names_pattern="(.).(....)" #four dots successfully transfers the year
+#   )
+#rename last two columns
+#w_matched_yr_reorg <- rename(w_matched_yr_reorg,
+#                      pop = p,
+#                      forest = r)
+
+
+# try again based on https://dcl-wrangle.stanford.edu/pivot-advanced.html
+#this works but the time variant variables are all in a single column, "timevariant"
+w_matched_yr_longer <- w_matched_yr_bind %>%
   pivot_longer(
-    cols = pop.1:for.9,
-    names_to = c(".value", "time"),
-    names_prefix = "(.).",
-    names_pattern="(.).(.)"
+    cols = for2005:ricesd2017,
+    names_to = c("timevariant", "year"),
+    names_pattern = "([A-Za-z]+)(\\d+)",
+    values_to = "timevariant_values"
   )
 
-#rename last two columns
-w_matched_yr_reorg <- rename(w_matched_yr_reorg,
-                      pop = p,
-                      forest = r)
+#View
+View(w_matched_yr_longer)
+
+#now pivot wider to get time variant variables as columns instead of rows
+w_matched_yr_wider <- w_matched_yr_longer %>%
+  pivot_wider(
+    names_from = "timevariant",
+    values_from = "timevariant_values"
+  )
 
 #View
-View(w_matched_yr_reorg)
+View(w_matched_yr_wider) #WORKED!! phew.
 
 #write to CSV
-write_csv(w_matched_yr_reorg,'outputs/w_matched_yr_reorg_12Jul2021c.csv') #update date
+write_csv(w_matched_yr_wider,'outputs/w_matched_yr_wider_17Mar2022.csv') #update date
 
 
 ### SPECIFY THE ANNUAL MODEL -------------------
 #outcome variable: FOREST COVER, so POSITIVE coefficients indicate MORE forest cover (LESS deforestation), I think
 
 #load data if needed
-w_matched_yr_reorg <- read_csv('outputs/w_matched_yr_reorg_9Jul2021b.csv')  
+w_matched_yr_wider <- read_csv('outputs/w_matched_yr_wider_17Mar2022.csv')
+
+names(w_matched_yr_wider)
 
 library(plm)
 
-did_m1_yr <- plm(forest ~ CFM*time + pop, data = w_matched_yr_reorg, effect="twoways", model = "within", index = c("UID", "time"))
+did_m1_yr <- plm(for ~ CFM*year + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #note I replaced "time" with "year", may need to create a new variable for 2005 = 1, 2006 = 2, etc.
 
 summary(did_m1_yr)
 
