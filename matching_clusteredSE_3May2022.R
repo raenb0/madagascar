@@ -479,12 +479,10 @@ w_matched_yr$defor2017 <- w_matched_yr$for2016-w_matched_yr$for2017
 
 names(w_matched_yr)
 
-#Select desired variables, reorder columns
-
-names(w_matched_yr)
+#Select desired variables, reorder columns, including riceavg2011 and ricesd2016 which are out of order
 
 w_matched_yr_subs <- w_matched_yr %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, defor2005:defor2017, distance2005:distance2017, pop2005:pop2017, riceavg2005:riceavg2017, ricesd2005:ricesd2017) #note edge_10 and edge_14 were renamed edge10 and edge14, added distance variables
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, defor2005:defor2017, distance2005:distance2017, pop2005:pop2017, riceavg2005:riceavg2010, riceavg2011, riceavg2012:riceavg2017, ricesd2005:ricesd2015, ricesd2016, ricesd2017) #note edge_10 and edge_14 were renamed edge10 and edge14, added distance variables
 
 names(w_matched_yr_subs)
 
@@ -551,7 +549,7 @@ w_matched_yr_wider <- rename(w_matched_yr_wider,
                        forest = "for")
 
 #write to CSV
-write_csv(w_matched_yr_wider,'outputs/w_matched_yr_wider_26Apr2022.csv') #update date
+write_csv(w_matched_yr_wider,'outputs/w_matched_yr_wider_3May2022.csv') #update date!
 
 
 
@@ -565,27 +563,30 @@ library(tidyr)
 library(plm)
 
 #load data if needed
-w_matched_yr_wider <- read_csv('outputs/w_matched_yr_wider_17Mar2022.csv')
+w_matched_yr_wider <- read_csv('outputs/w_matched_yr_wider_3May2022.csv') #update date!
 
 names(w_matched_yr_wider)
 
-#add variable "time" which takes values 1-13 for years 2005-2017
-w_matched_yr_wider$time <- w_matched_yr_wider$year - 2004
+#add variable "time" which takes values 1-13 for years 2005-2017 #doesn't work
+#w_matched_yr_wider$time <- w_matched_yr_wider$year - 2004 
+#Error in w_matched_yr_wider$year - 2004 : 
+#non-numeric argument to binary operator
 
-View(w_matched_yr_wider)
+#View(w_matched_yr_wider)
 
-did_m1_yr <- plm(forest ~ CFM*year + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #do I need to include CFM + time individually as well as the interaction term?
+did_m1_yr <- plm(defor ~ CFM*year + distance + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #new output variable defor instead of forest, new control variable "distance" from forest edge
+
+#did_m1_yr <- plm(forest ~ CFM*year + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #original version looked at forest cover, not defor
 
 summary(did_m1_yr)
 
-did_m1_yr_coeffs <- as.data.frame(did_m1_yr$coefficients)
-did_m1_yr_coeffs$variables <- row.names(did_m1_yr_coeffs)
 
-##genoud interrupted:
-##one may recover the best solution found so far by executing 
-pop <- read.table('C:\Users\raenb\AppData\Local\Temp\RtmpCwxFHX/genoud.pro', comment.char = 'G') 
-best <- pop[pop$V1 == 1,, drop = FALSE] 
-very.best <- as.matrix(best[nrow(best), 26:ncol(best)])
+#try package "broom" to output regression summary table
+library(broom)
+did_m1_yr_summary <- broom::tidy(did_m1_yr)
+
+#write to CSV
+write_csv(did_m1_yr_summary,'outputs/did_m1_yr_summary_3May2022.csv') #update date!
 
 
 
