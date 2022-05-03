@@ -197,12 +197,12 @@ Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE",
 
 # We do not need to specify the arguments Z and V in the Match function because we are not going to use the estimate from Matching
 # Z is needed if we want to do bias adjusment to linearly correct for the remaining imbalance within Matching. Usually Z is the same as X
-# Because BiasAdjust = FALSE, no biase adjustment will be performed (so no need to define Z)
+# Because BiasAdjust = FALSE, no bias adjustment will be performed (so no need to define Z)
 # V deals with the homoscedasticity assumption in linear model (t-test is a lineal model). V define the variables for which homoscedasticity-robust variances will be calculated
-# What we want is the ATT (Average effect of Treatment on the Treated). So, we leave the argument estimand to its defauld (i.e., "ATT")
+# What we want is the ATT (Average effect of Treatment on the Treated). So, we leave the argument estimand to its default (i.e., "ATT")
 # Weight = 2 specifies Mahalanobis distance matching
 
-m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex,replace=TRUE, ties=TRUE, Weight=2) # run matching
+m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex, replace=TRUE, ties=TRUE, Weight=2) # run matching
 
 
 
@@ -549,6 +549,9 @@ View(w_matched_yr_wider)
 did_m1_yr <- plm(forest ~ CFM*year + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #do I need to include CFM + time individually as well as the interaction term?
 
 summary(did_m1_yr)
+
+did_m1_yr_coeffs <- as.data.frame(did_m1_yr$coefficients)
+did_m1_yr_coeffs$variables <- row.names(did_m1_yr_coeffs)
 
 
 
