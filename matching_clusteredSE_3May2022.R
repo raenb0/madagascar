@@ -433,12 +433,14 @@ library(tidyverse)
 library(dplyr)
 
 #load tabular data if needed
-matched <- read_csv('outputs/mahalanobis_matched_17Mar2022.csv')  #update dates
+matched <- read_csv('outputs/mahalanobis_matched_26Apr2022.csv')  #update dates
 #wght <- read_csv('outputs/mahalanobis_wght_17Mar2022.csv') #unnecessary
 
 #add weights to matched dataset ##unnecessary
 
 w_matched_yr <- data.frame(matched)#, wght)
+
+names(w_matched_yr)
 
 #rename population variables
 
@@ -456,12 +458,34 @@ w_matched_yr$pop2015 <- w_matched_yr$pop15
 w_matched_yr$pop2016 <- w_matched_yr$pop16
 w_matched_yr$pop2017 <- w_matched_yr$pop17
 
+names(w_matched_yr)
+
+#add new columns for deforestation
+#this will return a 0 if there was no deforestation between years, 
+#and a positive number 0.0-1.0 if there was deforestation between years
+#(I know the order seems wrong, but this way we avoid negative numbers)
+
+w_matched_yr$defor06 <- w_matched_yr$for2005-w_matched_yr$for2006
+w_matched_yr$defor07 <- w_matched_yr$for2006-w_matched_yr$for2007
+w_matched_yr$defor08 <- w_matched_yr$for2007-w_matched_yr$for2008
+w_matched_yr$defor09 <- w_matched_yr$for2008-w_matched_yr$for2009
+w_matched_yr$defor10 <- w_matched_yr$for2009-w_matched_yr$for2010
+w_matched_yr$defor11 <- w_matched_yr$for2010-w_matched_yr$for2011
+w_matched_yr$defor12 <- w_matched_yr$for2011-w_matched_yr$for2012
+w_matched_yr$defor13 <- w_matched_yr$for2012-w_matched_yr$for2013
+w_matched_yr$defor14 <- w_matched_yr$for2013-w_matched_yr$for2014
+w_matched_yr$defor15 <- w_matched_yr$for2014-w_matched_yr$for2015
+w_matched_yr$defor16 <- w_matched_yr$for2015-w_matched_yr$for2016
+w_matched_yr$defor17 <- w_matched_yr$for2016-w_matched_yr$for2017
+
+names(w_matched_yr)
+
 #Select desired variables, reorder columns
 
 names(w_matched_yr)
 
 w_matched_yr_subs <- w_matched_yr %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, pop2005:pop2017, riceavg2005:riceavg2017, ricesd2005:ricesd2017) #note edge_10 and edge_14 were renamed edge10 and edge14
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, distance2005:distance2020, pop2005:pop2017, riceavg2005:riceavg2017, ricesd2005:ricesd2017) #note edge_10 and edge_14 were renamed edge10 and edge14, added distance variables
 
 names(w_matched_yr_subs)
 
@@ -495,6 +519,10 @@ CFM_data_yr$UID <- do.call(paste0, CFM_data_yr[c("PA_CFM", "ID")])
 #join the tables back together
 w_matched_yr_bind <- rbind(PA_data_yr, CFM_data_yr)
 View(w_matched_yr_bind)
+
+
+
+
 
 # reorganize based on https://dcl-wrangle.stanford.edu/pivot-advanced.html
 #this works but the time variant variables are all in a single column, "timevariant"
