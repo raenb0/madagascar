@@ -169,7 +169,7 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values **SKIPPED THIS STEP, MIGHT CAUSE ISSUES
 
 #write to CSV
-write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_26Apr2022.csv') #update date
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_6May2022.csv') #update date
 #write_csv(cfm_pa_data_90m,'outputs/cfm_pa_data_90m_17Mar2022.csv') #version with NA values
 
 # Define treatment
@@ -250,7 +250,7 @@ matched <- rbind(cfm_pa_data_90m_no_na[m1$index.treated,],cfm_pa_data_90m_no_na[
 
 #write to CSV *update date!
 
-write_csv(matched, 'outputs/mahalanobis_matched_26Apr2022.csv') #update date
+write_csv(matched, 'outputs/mahalanobis_matched_6May2022.csv') #update date
 #write.csv(wght,'outputs/mahalanobis_wght_17Mar2022.csv') #note this outputs a table with only values of 1***
 
 
@@ -433,7 +433,7 @@ library(tidyverse)
 library(dplyr)
 
 #load tabular data if needed
-matched <- read_csv('outputs/mahalanobis_matched_26Apr2022.csv')  #update dates
+matched <- read_csv('outputs/mahalanobis_matched_6May2022.csv')  #update dates
 #wght <- read_csv('outputs/mahalanobis_wght_17Mar2022.csv') #unnecessary
 
 #add weights to matched dataset ##unnecessary
@@ -482,7 +482,7 @@ names(w_matched_yr)
 #Select desired variables, reorder columns, including riceavg2011 and ricesd2016 which are out of order
 
 w_matched_yr_subs <- w_matched_yr %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, defor2005:defor2017, distance2005:distance2017, pop2005:pop2017, riceavg2005:riceavg2010, riceavg2011, riceavg2012:riceavg2017, ricesd2005:ricesd2015, ricesd2016, ricesd2017) #note edge_10 and edge_14 were renamed edge10 and edge14, added distance variables
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, defor2005:defor2017, distance2005:distance2017, pop2005:pop2017, riceavg2005:riceavg2010, riceavg2011, riceavg2012:riceavg2017, ricesd2005:ricesd2015, ricesd2016, ricesd2017, drought2005:drought2017, maxPrecip2005:maxPrecip2017, maxTemp2005:maxTemp2017, wind2005:wind2017) #note edge_10 and edge_14 were renamed edge10 and edge14, added distance variables, added climate variables, excluded 2018-2020 for now
 
 names(w_matched_yr_subs)
 
@@ -525,7 +525,7 @@ View(w_matched_yr_bind)
 #this works but the time variant variables are all in a single column, "timevariant"
 w_matched_yr_longer <- w_matched_yr_bind %>%
   pivot_longer(
-    cols = for2005:ricesd2017,
+    cols = for2005:wind2017, #added new variables here
     names_to = c("timevariant", "year"),
     names_pattern = "([A-Za-z]+)(\\d+)",
     values_to = "timevariant_values"
@@ -549,7 +549,7 @@ w_matched_yr_wider <- rename(w_matched_yr_wider,
                        forest = "for")
 
 #write to CSV
-write_csv(w_matched_yr_wider,'outputs/w_matched_yr_wider_3May2022.csv') #update date!
+write_csv(w_matched_yr_wider,'outputs/w_matched_yr_wider_6May2022.csv') #update date!
 
 
 
@@ -574,7 +574,7 @@ names(w_matched_yr_wider)
 
 #View(w_matched_yr_wider)
 
-did_m1_yr <- plm(defor ~ CFM*year + distance + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #new output variable defor instead of forest, new control variable "distance" from forest edge
+did_m1_yr <- plm(defor ~ CFM*year + distance + pop + riceavg + ricesd + drought + maxPrecip + maxTemp + wind, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #new output variable defor instead of forest, new control variable "distance" from forest edge
 
 #did_m1_yr <- plm(forest ~ CFM*year + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #original version looked at forest cover, not defor
 
@@ -586,7 +586,7 @@ library(broom)
 did_m1_yr_summary <- broom::tidy(did_m1_yr)
 
 #write to CSV
-write_csv(did_m1_yr_summary,'outputs/did_m1_yr_summary_3May2022.csv') #update date!
+write_csv(did_m1_yr_summary,'outputs/did_m1_yr_summary_6May2022.csv') #update date!
 
 
 
