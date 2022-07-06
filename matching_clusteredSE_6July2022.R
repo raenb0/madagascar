@@ -34,7 +34,6 @@ cfm_90m_data <- rename(cfm_90m_data,
                        dist_road = distroad,
                        dist_urb = disturb,
                        dist_vil = distvil,
-                       edge_05 = edge05,
                        elev = elevmsk,
                        for2000 = for200090m,
                        for2001 = for200190m,
@@ -85,7 +84,6 @@ pa_90m_data <- rename(pa_90m_data,
                       dist_road = distroad,
                       dist_urb = disturb,
                       dist_vil = distvil,
-                      edge_05 = edge05,
                       elev = elevmsk,
                       for2000 = for200090m,
                       for2001 = for200190m,
@@ -164,16 +162,13 @@ names(pa_90m_filter)
 
 cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes all rows in x or y
 
-#cfm_pa_data_90m <- cfm_pa_data_90m %>% dplyr::select(-InclProb) #dropped first variable (InclProb) 
-
-cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values **SKIPPED THIS STEP, MIGHT CAUSE ISSUES
+cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values #NOTE lose around 10,000 observations
 
 #write to CSV
-write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_6May2022.csv') #update date
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_6July2022.csv') #update date
 #write_csv(cfm_pa_data_90m,'outputs/cfm_pa_data_90m_17Mar2022.csv') #version with NA values
 
 # Define treatment
-# Ranaivo says: We do not need to define the outcome because we are not going to use the estimate from Matching. Matching can work without the outcome.
 
 Treat <- cfm_pa_data_90m_no_na$CFM
 
@@ -181,7 +176,7 @@ Treat <- cfm_pa_data_90m_no_na$CFM
 
 names(cfm_pa_data_90m_no_na)
 
-cov.names <- c("dist_cart","dist_road","dist_urb","dist_vil","DVSP","edge_05","elev","pop05","rice","precip","slope","veg_type") # Names of covariates used to match **NOTE alphabetical order, included population 2005 and distance to forest edge 2005
+cov.names <- c("dist_cart","dist_road","dist_urb","dist_vil","DVSP","edge05","elev","pop05","precip","rice","slope","veg_type") # Names of covariates used to match **NOTE alphabetical order, included population 2005 and distance to forest edge 2005
 
 # Extract the covariates
 
@@ -202,8 +197,10 @@ Ex <- c("FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE",
 # What we want is the ATT (Average effect of Treatment on the Treated). So, we leave the argument estimand to its default (i.e., "ATT")
 # Weight = 2 specifies Mahalanobis distance matching
 
+startTime <- Sys.time() #to record time required to run this
 m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex, replace=TRUE, ties=TRUE, Weight=2) # run matching
-
+endTime <- Sys.time()
+print(endTime - startTime)
 
 
 # CHECK COVARIATE BALANCE -------------------------------------------------
@@ -211,36 +208,12 @@ m1 <-  Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE,  exact=Ex, replace=TRUE,
 
 names(covs)
 
-mb1 <- MatchBalance(Treat ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge_05 + elev + pop05 + precip + rice + slope + veg_type,
-                    match.out = m1, nboots = 500, data=cfm_pa_data_90m_no_na) 
+startTime <- Sys.time() #to record time required to run this
+mb1 <- MatchBalance(Treat ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge05 + elev + pop05 + precip + rice + slope + veg_type,
+                    match.out = m1, nboots = 500, data=cfm_pa_data_90m_no_na)
+endTime <- Sys.time()
+print(endTime - startTime) #only takes ~30 seconds
 
-# Ranaivo said: Do not worry about the p-values of the balance statistics. We have large sample. So, p-values are likely to be significant
-# Further, there is the issue of multiple hypotheses testing. The same dataset is used to test the different covariates. So, the probability of finding significant difference is increased
-
-
-## Check match balance using f tests
-
-##Chris said: The matching effectiveness can be tested using a joint balance test (an F- or chi-squared test of the linear
-#probability OLS regression using CFM as a binary dependent variable, regressed on all of the observables you have at baseline
-#(2005) and look at the F-test that the whole set of covariates explains statistically significant variation in CFM status 
-#(vs. PA status).
-
-#BEFORE MATCHING:
-
-#load data if needed
-cfm_pa_data_90m_no_na <- read_csv('outputs/cfm_pa_data_90m_no_na_26Apr2022.csv') #update date
-matched <- read_csv('outputs/mahalanobis_matched_26Apr2022.csv')  #update date
-
-Treat <- cfm_pa_data_90m_no_na$CFM
-
-mb2 <- lm(CFM ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge_05 + elev + pop05 + precip + rice + slope + veg_type, data = cfm_pa_data_90m_no_na)
-summary(mb2)
-
-#AFTER MATCHING: 
-
-mb3 <- lm(CFM ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge_05 + elev + pop05 + precip + rice + slope + veg_type, data = matched)
-
-summary(mb3)
 
 
 ## MATCHED DATASET TO BE USED FOR THE DIFFERENCE IN DIFFERENCE (DID) ANALYSIS 
@@ -250,20 +223,47 @@ matched <- rbind(cfm_pa_data_90m_no_na[m1$index.treated,],cfm_pa_data_90m_no_na[
 
 #write to CSV *update date!
 
-write_csv(matched, 'outputs/mahalanobis_matched_6May2022.csv') #update date
+write_csv(matched, 'outputs/mahalanobis_matched_6July2022.csv') #update date
 #write.csv(wght,'outputs/mahalanobis_wght_17Mar2022.csv') #note this outputs a table with only values of 1***
 
+
+## Check match balance using f tests
+
+##Chris said: The matching effectiveness can be tested using a joint balance test (an F- or chi-squared test of the linear probability OLS regression using CFM as a binary dependent variable, regressed on all of the observables you have at baseline (2005) and look at the F-test that the whole set of covariates explains statistically significant variation in CFM status (vs. PA status).
+
+#BEFORE MATCHING:
+
+#load data if needed
+cfm_pa_data_90m_no_na <- read_csv('outputs/cfm_pa_data_90m_no_na_6July2022.csv') #update date
+matched <- read_csv('outputs/mahalanobis_matched_6July2022.csv')  #update date
+
+Treat <- cfm_pa_data_90m_no_na$CFM
+
+mb2 <- lm(CFM ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge05 + elev + pop05 + precip + rice + slope + veg_type, data = cfm_pa_data_90m_no_na)
+
+summary(mb2) #F-statistic: 500.7 on 12 and 37247 DF,  p-value: < 2.2e-16
+
+#AFTER MATCHING: 
+
+mb3 <- lm(CFM ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge05 + elev + pop05 + precip + rice + slope + veg_type, data = matched)
+
+summary(mb3) #F-statistic: 13.83 on 12 and 14575 DF,  p-value: < 2.2e-16
 
 
 ### GENETIC MATCHING ###  (TAKES >63 HRS TO RUN)-------------------------
 # library(rgenoud)
 # 
 # ## SPECIFYING THE MATCHING
+#
+# startTime_gen <- Sys.time() #to record time required
 # gen1 <- GenMatch(Tr=Treat, X=covs, pop.size= 500, exact= Ex, replace=TRUE, ties= TRUE) #took >63 hrs to run
+#endTime_gen <- Sys.time()
+#print(endTime_gen - startTime_gen)
+#
 # mgen1 <- Match(Tr=Treat, X=covs, M = 1, BiasAdjust=FALSE, exact=Ex, replace=TRUE, ties=TRUE, Weight.matrix= gen1)
 # 
 # ## CHECK COVARIATE BALANCE
-# mb2 <- MatchBalance(Treat ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge_05 + elev + pop05 + precip + rice + slope + veg_type,
+# mb2 <- MatchBalance(Treat ~ dist_cart + dist_road + dist_urb + dist_vil + DVSP + edge05 + elev + pop05 + precip + rice + slope + veg_type,
 #                     match.out = mgen1, nboots = 500, data=cfm_pa_data_90m_no_na) 
 # 
 # ## MATCHED DATASET TO BE USED FOR THE DIFFERENCE IN DIFFERENCE (DID) ANALYSIS 
@@ -271,7 +271,7 @@ write_csv(matched, 'outputs/mahalanobis_matched_6May2022.csv') #update date
 # gen.matched <- rbind(cfm_pa_data_90m_no_na[mgen1$index.treated,],cfm_pa_data_90m_no_na[mgen1$index.control,]) # this is the matched dataset
 # gen.wght <- c(mgen1$weights,mgen1$weights)# weights of the observations in the matched dataset, to be used for post matching analysis (e.g., DID regression)
 # 
-# #WRITE TO CSV (Ranaivo says not to bother)
+# #WRITE TO CSV
 # 
 # write.csv(gen.matched,'outputs/genetic_matched.csv')
 # write.csv(gen.wght,'outputs/genetic_wght.csv')
@@ -279,147 +279,210 @@ write_csv(matched, 'outputs/mahalanobis_matched_6May2022.csv') #update date
 
 
 # ## REORGANIZE MAHALANOBIS MATCHED DATA FOR TWO-PERIOD ANALYSIS -----------------------
-# 
-# library(tidyverse)
-# library(dplyr)
-# 
-# #load tabular data if needed
-# 
-# matched <- read_csv('outputs/mahalanobis_matched_17Mar2022.csv')  #update dates
-# wght <- read_csv('outputs/mahalanobis_wght_17Mar2022.csv')
-# 
-# #add weights to matched dataset
-# 
-# w.matched <- data.frame(matched, wght)
-# 
-# #add new columns for deforestation
-# #this will return a 0 if there was no deforestation between 2005 and 2010, 
-# #and 0-1 if there was deforestation from 2005 and 2010 
-# #(I know the order seems wrong, but this way we avoid negative numbers)
-# 
-# w.matched$defor.1 <- w.matched$for2005-w.matched$for2010
-# w.matched$defor.2 <- w.matched$for2010-w.matched$for2014
-# 
-# #add population variables 
-# #Ranaivo says: It is better to use the pop at the beginning of the periods 
-# #(i.e., in 2005 for period 1 and 2010 for period 2) than the difference
-# #(we only need 2 time periods)
-# 
-# w.matched$pop.1 <- w.matched$pop05
-# w.matched$pop.2 <- w.matched$pop10
-# 
-# #add distance to forest edge variables
-# 
-# w.matched$edge.1 <- w.matched$edge_05
-# w.matched$edge.2 <- w.matched$edge_10
-# 
-# #add change in forest density (fragmentation) variables **New addition July 12
-# #this will return a 0 if there was no change in density % between 2005 and 2010, 
-# #and 0-100 if there was change in density % from 2005 and 2010 
-# # e.g. POSITIVE values indicate DECREASE in density
-# 
-# w.matched$dens.1 <- w.matched$fordens05-w.matched$fordens10
-# w.matched$dens.2 <- w.matched$fordens10-w.matched$fordens14
-# 
-# #Select desired variables, reorder columns
-# 
-# names(w.matched)
-# 
-# w.matched.subs <- w.matched %>%
-#   dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg_type,  pop.1, pop.2, defor.1, defor.2, edge.1, edge.2, dens.1, dens.2)
-# 
-# #subset data to split up PA and CFM data
-# 
-# #for PA data:
-# PA_data <- w.matched.subs %>%
-#   filter(CFM==0)
-# 
-# #for CFM data:
-# 
-# CFM_data <- w.matched.subs %>%
-#   filter(CFM==1)
-# 
-# #add unique ID columns to each subset:
-# PA_data$ID <- seq.int(nrow(PA_data))
-# CFM_data$ID <- seq.int(nrow(CFM_data))
-# 
-# #add new variable PA_CFM
-# PA_data$PA_CFM <- "PA"
-# CFM_data$PA_CFM <- "CFM"
-# 
-# #create character strings for new unique IDs
-# PA_data$UID <- do.call(paste0, PA_data[c("PA_CFM", "ID")])
-# CFM_data$UID <- do.call(paste0, CFM_data[c("PA_CFM", "ID")])
-# 
-# #check to make sure they look ok
-# View(PA_data)
-# View(CFM_data)
-# 
-# #add new variable to CFM data: "renewed" (0 or 1) to indicate subset of CFM areas that were renewed ("implemented") ***new addition August 18 2021
-# 
-# cfm_pre05_renewed <- read_csv('data/CFM_pre05_renewed.csv') #attribute table from CFM pre-2005 shp
-# renewed <- cfm_pre05_renewed %>%
-#   dplyr::select(ID, RENEWED)
-# CFM_data <- left_join(CFM_data, renewed, by = c("cfm_id" = "ID"))
-# 
-# PA_data$RENEWED <- 0 #number of columns must match
-# 
-# #join the tables back together
-# w.matched_bind <- rbind(PA_data, CFM_data)
-# View(w.matched_bind)
-# 
-# #reorganize
-# w.matched.reorg <- reshape(w.matched_bind,
-#                             idvar = "UID",
-#                             direction = "long",
-#                             varying = c("pop.1", "pop.2", "defor.1", "defor.2", "edge.1", "edge.2", "dens.1", "dens.2")
-#                             )
-# 
-# #View
-# View(w.matched.reorg)
-# 
-# #write to CSV
-# write_csv(w.matched.reorg,'outputs/w.matched.reorg_18Aug2021.csv') #update date
+
+library(tidyverse)
+library(dplyr)
+
+#load tabular data if needed
+
+matched <- read_csv('outputs/mahalanobis_matched_6July2022.csv')  #update dates
+names(matched)
+
+#add new columns for deforestation
+#this will return a 0 if there was no deforestation between 2005 and 2010,
+#and 0-1 if there was deforestation from 2005 and 2010
+#(reverse order to avoid negative numbers)
+
+matched$defor.1 <- matched$for2005-matched$for2010
+matched$defor.2 <- matched$for2010-matched$for2014
+
+#add population variables
+
+matched$pop.1 <- matched$pop05
+matched$pop.2 <- matched$pop10
+
+#add rice price variables #do you want a single year, or avg over the previous 5 year period??**ask Chris
+
+matched$riceavg.1 <- matched$riceavg2005
+matched$riceavg.2 <- matched$riceavg2010
+
+#add rice volatility variables
+
+matched$ricesd.1 <- matched$ricesd2005
+matched$ricesd.2 <- matched$ricesd2010
+
+#add drought variables
+
+matched$drought.1 <- matched$drought2005
+matched$drought.2 <- matched$drought2010
+
+#add maxPrecip variables
+
+matched$maxPrecip.1 <- matched$maxPrecip2005
+matched$maxPrecip.2 <- matched$maxPrecip2010
+
+#add maxTemp variables
+
+matched$maxTemp.1 <- matched$maxTemp2005
+matched$maxTemp.2 <- matched$maxTemp2010
+
+#add wind variables
+
+matched$wind.1 <- matched$wind2005
+matched$wind.2 <- matched$wind2010
+
+
+#add distance to forest edge variables
+
+matched$edge.1 <- matched$edge05
+matched$edge.2 <- matched$edge10
+
+#add change in forest density (fragmentation) variables **New addition July 12
+#this will return a 0 if there was no change in density % between 2005 and 2010,
+#and 0-100 if there was change in density % from 2005 and 2010
+# e.g. POSITIVE values indicate DECREASE in density
+
+matched$dens.1 <- matched$fordens2005-matched$fordens2010
+matched$dens.2 <- matched$fordens2010-matched$fordens2014
+
+#Select desired variables, reorder columns
+
+names(matched)
+
+matched.subs <- matched %>%
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, elev, rice, precip, slope, veg_type,  defor.1:dens.2) #grab all new columns at the end
+
+#subset data to split up PA and CFM data
+
+#for PA data:
+PA_data <- matched.subs %>%
+  filter(CFM==0)
+
+#for CFM data:
+
+CFM_data <- matched.subs %>%
+  filter(CFM==1)
+
+#add unique ID columns to each subset:
+PA_data$ID <- seq.int(nrow(PA_data))
+CFM_data$ID <- seq.int(nrow(CFM_data))
+
+#add new variable PA_CFM
+PA_data$PA_CFM <- "PA"
+CFM_data$PA_CFM <- "CFM"
+
+#create character strings for new unique IDs
+PA_data$UID <- do.call(paste0, PA_data[c("PA_CFM", "ID")])
+CFM_data$UID <- do.call(paste0, CFM_data[c("PA_CFM", "ID")])
+
+#check to make sure they look ok
+View(PA_data)
+View(CFM_data)
+
+#add new variable to CFM data: "renewed" (0 or 1) to indicate subset of CFM areas that were renewed ("implemented")
+
+cfm_pre05_renewed <- read_csv('data/CFM_pre05_renewed.csv') #attribute table from CFM pre-2005 shp
+renewed <- cfm_pre05_renewed %>%
+  dplyr::select(ID, RENEWED)
+CFM_data <- left_join(CFM_data, renewed, by = c("cfm_id" = "ID"))
+
+PA_data$RENEWED <- 0 #number of columns must match
+
+#join the tables back together
+matched_bind <- rbind(PA_data, CFM_data)
+View(matched_bind)
+
+names(matched_bind)
+
+#reorganize  
+matched_longer <- matched_bind %>%
+  pivot_longer(
+    cols = defor.1:dens.2,
+    names_to = c("timevariant", "period"),
+    names_pattern = "([A-Za-z]+).(\\d+)",
+    values_to = "timevariant_values"
+  )
+
+#View
+View(matched_longer)
+
+#now pivot wider to get time variant variables as columns instead of rows
+matched_wider <- matched_longer %>%
+  pivot_wider(
+    names_from = "timevariant",
+    values_from = "timevariant_values"
+  )
+
+#View
+View(matched_wider) #WORKED!
+
+#write to CSV
+write_csv(matched_wider,'outputs/matched_wider_6July2022.csv') #update date
 
 
 
-# ### SPECIFY THE TWO-PERIOD MODEL, DEFORESTATION OUTCOME -------------------
-# #outcome variable: DEFORESTATION (so POSITIVE coefficients = MORE deforestation, I think)
-# 
-# #load data if needed
-# w.matched.reorg <- read_csv('outputs/w.matched.reorg_27Aug2021.csv')  
-# 
-# library(plm)
-# library(clubSandwich)
-# 
-# did_m1 <- plm(defor ~ CFM*time + pop + edge, data = w.matched.reorg, effect="twoways", model = "within", index = c("UID", "time"))
-# 
-# summary(did_m1)
-# 
-# #### CLUSTERED SE -------------------
-# #code adapted from Ranaivo
-# 
-# #add a new alphanumeric variable: "cluster" with the format cfm00pa00
-# names(w.matched.reorg)
-# w.matched.reorg$cluster <- do.call(paste0, c("cfm", w.matched.reorg["cfm_id"], "pa", w.matched.reorg["pa_id"]))
-# 
-# memory.limit(size=5000000)
-# 
-# V_CR2 <- vcovCR(did_m1, cluster=w.matched.reorg$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data #didn't work: Error: cannot allocate vector of size 3.7 Gb
-# 
-# coef_test(did_m1, vcov=V_CR2, test="Satterthwaite") # p-values #also took a long time to run
-# conf_int(did_m1, vcov=V_CR2, test="Satterthwaite") # 95% CI. I personally prefer presenting CI because of all the controversies surrounding p-values
-# 
-# 
+### SPECIFY THE TWO-PERIOD MODEL, DEFORESTATION OUTCOME -------------------
+#outcome variable: DEFORESTATION (so POSITIVE coefficients = MORE deforestation, I think)
+
+library(plm)
+library(clubSandwich)
+
+#load data if needed
+matched_wider <- read_csv('outputs/matched_wider_6July2022.csv') #update date
+
+names(matched_wider) #edge was strongly correlated with other variables, threw an error, so I removed it
+
+did_m1 <- plm(defor ~ CFM*period + pop + riceavg + ricesd + drought + maxPrecip + maxTemp + wind, 
+              data = matched_wider, 
+              effect="twoways", 
+              model = "within", 
+              index = c("UID", "period"))
+
+summary(did_m1) 
+
+#Error when I included "edge" variable
+#This results from linearly dependent columns, i.e. strongly correlated variables. Examine the pairwise covariance (or correlation) of your variables to investigate if there are any variables that can potentially be removed. You're looking for covariances (or correlations) >> 0. Alternatively, you can probably automate this variable selection by using a forward stepwise regression.
+
+#Also the model automatically dropped ricesd "because of singularities"
+
+
+#### CLUSTERED SE -------------------
+#code adapted from Ranaivo
+
+#add a new alphanumeric variable: "cluster" with the format cfm00pa00
+names(matched_wider)
+matched_wider$cluster <- do.call(paste0, c("cfm", matched_wider["cfm_id"], "pa", matched_wider["pa_id"]))
+
+memory.limit(size=5000000)
+
+#clustering SE:
+startTime <- Sys.time() #to record time required to run this (40 minutes)
+V_CR2 <- vcovCR(did_m1, cluster=matched_wider$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data #didn't work: Error: Error: cannot allocate vector of size 1.6 Gb
+endTime <- Sys.time()
+print(endTime - startTime) #took 40 minutes
+
+#p-values
+startTime <- Sys.time()
+coef_test(did_m1, vcov=V_CR2, test="Satterthwaite") # p-values #also took a long time to run
+endTime <- Sys.time()
+print(endTime - startTime)
+
+#95% CI
+startTime <- Sys.time()
+conf_int(did_m1, vcov=V_CR2, test="Satterthwaite") # 95% CI. I personally prefer presenting CI because of all the controversies surrounding p-values
+endTime <- Sys.time()
+print(endTime - startTime)
+
+
 # ### SPECIFY THE TWO-PERIOD MODEL, FOREST DENSITY OUTCOME -------------------
 # #outcome variable: FOREST DENSITY (so POSITIVE coefficients = MORE intact forest, I think)
 # 
 # #load data if needed
-# w.matched.reorg <- read_csv('outputs/w.matched.reorg_27Aug2021.csv')  
+# matched_wider <- read_csv('outputs/matched_wider_6July2022.csv')
 # 
 # library(plm)
 # 
-# did_m2 <- plm(dens ~ CFM*time + pop + edge, data = w.matched.reorg, effect="twoways", model = "within", index = c("UID", "time"))
+# did_m2 <- plm(dens ~ CFM*time + pop + edge, data = matched_wider, effect="twoways", model = "within", index = c("UID", "time"))
 # 
 # summary(did_m2)
 
@@ -482,7 +545,7 @@ names(w_matched_yr)
 #Select desired variables, reorder columns, including riceavg2011 and ricesd2016 which are out of order
 
 w_matched_yr_subs <- w_matched_yr %>%
-  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge_05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, defor2005:defor2017, distance2005:distance2017, pop2005:pop2017, riceavg2005:riceavg2010, riceavg2011, riceavg2012:riceavg2017, ricesd2005:ricesd2015, ricesd2016, ricesd2017, drought2005:drought2017, maxPrecip2005:maxPrecip2017, maxTemp2005:maxTemp2017, wind2005:wind2017) #note edge_10 and edge_14 were renamed edge10 and edge14, added distance variables, added climate variables, excluded 2018-2020 for now
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge05, edge10, edge14,fordens2005, fordens2010, fordens2014, elev, rice, precip, slope, veg_type, for2005:for2017, defor2005:defor2017, distance2005:distance2017, pop2005:pop2017, riceavg2005:riceavg2010, riceavg2011, riceavg2012:riceavg2017, ricesd2005:ricesd2015, ricesd2016, ricesd2017, drought2005:drought2017, maxPrecip2005:maxPrecip2017, maxTemp2005:maxTemp2017, wind2005:wind2017) #note edge_10 and edge_14 were renamed edge10 and edge14, added distance variables, added climate variables, excluded 2018-2020 for now
 
 names(w_matched_yr_subs)
 
