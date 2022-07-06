@@ -449,24 +449,31 @@ summary(did_m1)
 #### CLUSTERED SE -------------------
 #code adapted from Ranaivo
 
+#load data if needed
+matched_wider <- read_csv('outputs/matched_wider_6July2022.csv') #update date
+
 #add a new alphanumeric variable: "cluster" with the format cfm00pa00
 names(matched_wider)
 matched_wider$cluster <- do.call(paste0, c("cfm", matched_wider["cfm_id"], "pa", matched_wider["pa_id"]))
+view(matched_wider)
+
+#write to CSV
+write_csv(matched_wider,'outputs/matched_wider_cluster_6July2022.csv') #update date
 
 memory.limit(size=5000000)
 
-#clustering SE:
+#clustering SE (takes a long time, requires too much memory:
 startTime <- Sys.time() #to record time required to run this (40 minutes)
-V_CR2 <- vcovCR(did_m1, cluster=matched_wider$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data #didn't work: Error: Error: cannot allocate vector of size 1.6 Gb
+V_CR2 <- vcovCR(did_m1, cluster=matched_wider$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data #didn't work: Error:  cannot allocate vector of size 1.6 Gb
 endTime <- Sys.time()
 print(endTime - startTime) #took 40 minutes
 
 #p-values
 startTime <- Sys.time()
-coef_test(did_m1, vcov=V_CR2, test="Satterthwaite") # p-values #also took a long time to run
+coef_test(did_m1, vcov=V_CR2, test="Satterthwaite") # p-values, also took a long time to run
 endTime <- Sys.time()
 print(endTime - startTime)
-
+      
 #95% CI
 startTime <- Sys.time()
 conf_int(did_m1, vcov=V_CR2, test="Satterthwaite") # 95% CI. I personally prefer presenting CI because of all the controversies surrounding p-values
@@ -490,7 +497,7 @@ print(endTime - startTime)
 
 
 
-## REORGANIZE MAHALANOBIS MATCHED DATA FOR ANNUAL ANALYSIS -----------------------##updated March 17 2022
+## REORGANIZE MAHALANOBIS MATCHED DATA FOR ANNUAL ANALYSIS -----------------------##updated May 2022
 
 library(tidyverse)
 library(dplyr)
