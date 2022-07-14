@@ -10,8 +10,25 @@ setwd("C:/Users/raenb/Documents/GitHub/madagascar") # set working directory
 
 # read in 90m data
 
-cfm_90m_data <- read_csv("data/sample_points/cfm05_90m_data.csv") #note all columns read in as double, but some are categorical**
+cfm_90m_data <- read_csv("data/sample_points/cfm05_90m_data.csv") #note all columns read in as double, but some are categorical e.g. veg type can be 1, 2, 3**
+cfm_rnw_90m_data <- read_csv("data/sample_points/cfm05_rnw_90m_data.csv") #subset of CFM that were renewed
 pa_90m_data <- read_csv("data/sample_points/pa05_90m_data.csv")
+
+#change data types for categorical columns - is this necessary?
+cfm_90m_data <- cfm_90m_data %>% mutate(cfmid = as.integer(cfmid),
+                         paid = as.integer(paid),
+                         rice = as.integer(rice),
+                         vegtype = as.integer(vegtype))
+
+cfm_rnw_90m_data <- cfm_rnw_90m_data %>% mutate(cfmid = as.integer(cfmid),
+                                        paid = as.integer(paid),
+                                        rice = as.integer(rice),
+                                        vegtype = as.integer(vegtype))
+
+pa_90m_data <- pa_90m_data %>% mutate(cfmid = as.integer(cfmid),
+                                        paid = as.integer(paid),
+                                        rice = as.integer(rice),
+                                        vegtype = as.integer(vegtype))
 
 # read in 300m data
 
@@ -34,41 +51,41 @@ cfm_90m_data <- rename(cfm_90m_data,
                        dist_road = distroad,
                        dist_urb = disturb,
                        dist_vil = distvil,
-                       elev = elevmsk,
-                       for2000 = for200090m,
-                       for2001 = for200190m,
-                       for2002 = for200290m,
-                       for2003 = for200390m,
-                       for2004 = for200490m,
-                       for2005 = for200590m,
-                       for2006 = for200690m,
-                       for2007 = for200790m,
-                       for2008 = for200890m,
-                       for2009 = for200990m,
-                       for2010 = for201090m,
-                       for2011 = for201190m,
-                       for2012 = for201290m,
-                       for2013 = for201390m,
-                       for2014 = for201490m,
-                       for2015 = for201590m,
-                       for2016 = for201690m,
-                       for2017 = for201790m,
+                       # elev = elevmsk,
+                       # for2000 = for200090m,
+                       # for2001 = for200190m,
+                       # for2002 = for200290m,
+                       # for2003 = for200390m,
+                       # for2004 = for200490m,
+                       # for2005 = for200590m,
+                       # for2006 = for200690m,
+                       # for2007 = for200790m,
+                       # for2008 = for200890m,
+                       # for2009 = for200990m,
+                       # for2010 = for201090m,
+                       # for2011 = for201190m,
+                       # for2012 = for201290m,
+                       # for2013 = for201390m,
+                       # for2014 = for201490m,
+                       # for2015 = for201590m,
+                       # for2016 = for201690m,
+                       # for2017 = for201790m,
                        pa_id = paid,
-                       precip = precyr,
-                       pop05 = mdgpd2005,
-                       pop06 = mdgpd2006,
-                       pop07 = mdgpd2007,
-                       pop08 = mdgpd2008,
-                       pop09 = mdgpd2009,
-                       pop10 = mdgpd2010,
-                       pop11 = mdgpd2011,
-                       pop12 = mdgpd2012,
-                       pop13 = mdgpd2013,
-                       pop14 = mdgpd2014,
-                       pop15 = mdgpd2015,
-                       pop16 = mdgpd2016,
-                       pop17 = mdgpd2017,
-                       rice = ricethr,
+                       # precip = precyr,
+                       # pop05 = mdgpd2005,
+                       # pop06 = mdgpd2006,
+                       # pop07 = mdgpd2007,
+                       # pop08 = mdgpd2008,
+                       # pop09 = mdgpd2009,
+                       # pop10 = mdgpd2010,
+                       # pop11 = mdgpd2011,
+                       # pop12 = mdgpd2012,
+                       # pop13 = mdgpd2013,
+                       # pop14 = mdgpd2014,
+                       # pop15 = mdgpd2015,
+                       # pop16 = mdgpd2016,
+                       # pop17 = mdgpd2017,
+                       # rice = ricethr,
                        veg_type = vegtype) 
 
 
@@ -84,44 +101,57 @@ pa_90m_data <- rename(pa_90m_data,
                       dist_road = distroad,
                       dist_urb = disturb,
                       dist_vil = distvil,
-                      elev = elevmsk,
-                      for2000 = for200090m,
-                      for2001 = for200190m,
-                      for2002 = for200290m,
-                      for2003 = for200390m,
-                      for2004 = for200490m,
-                      for2005 = for200590m,
-                      for2006 = for200690m,
-                      for2007 = for200790m,
-                      for2008 = for200890m,
-                      for2009 = for200990m,
-                      for2010 = for201090m,
-                      for2011 = for201190m,
-                      for2012 = for201290m,
-                      for2013 = for201390m,
-                      for2014 = for201490m,
-                      for2015 = for201590m,
-                      for2016 = for201690m,
-                      for2017 = for201790m,
+                      # elev = elevmsk,
+                      # for2000 = for200090m,
+                      # for2001 = for200190m,
+                      # for2002 = for200290m,
+                      # for2003 = for200390m,
+                      # for2004 = for200490m,
+                      # for2005 = for200590m,
+                      # for2006 = for200690m,
+                      # for2007 = for200790m,
+                      # for2008 = for200890m,
+                      # for2009 = for200990m,
+                      # for2010 = for201090m,
+                      # for2011 = for201190m,
+                      # for2012 = for201290m,
+                      # for2013 = for201390m,
+                      # for2014 = for201490m,
+                      # for2015 = for201590m,
+                      # for2016 = for201690m,
+                      # for2017 = for201790m,
                       pa_id = paid,
-                      precip = precyr,
-                      pop05 = mdgpd2005,
-                      pop06 = mdgpd2006,
-                      pop07 = mdgpd2007,
-                      pop08 = mdgpd2008,
-                      pop09 = mdgpd2009,
-                      pop10 = mdgpd2010,
-                      pop11 = mdgpd2011,
-                      pop12 = mdgpd2012,
-                      pop13 = mdgpd2013,
-                      pop14 = mdgpd2014,
-                      pop15 = mdgpd2015,
-                      pop16 = mdgpd2016,
-                      pop17 = mdgpd2017,
-                      rice = ricethr,
+                      # precip = precyr,
+                      # pop05 = mdgpd2005,
+                      # pop06 = mdgpd2006,
+                      # pop07 = mdgpd2007,
+                      # pop08 = mdgpd2008,
+                      # pop09 = mdgpd2009,
+                      # pop10 = mdgpd2010,
+                      # pop11 = mdgpd2011,
+                      # pop12 = mdgpd2012,
+                      # pop13 = mdgpd2013,
+                      # pop14 = mdgpd2014,
+                      # pop15 = mdgpd2015,
+                      # pop16 = mdgpd2016,
+                      # pop17 = mdgpd2017,
+                      # rice = ricethr,
                       veg_type = vegtype)
 
 names(pa_90m_data) #check if renaming worked
+
+
+#add new variable to CFM data: "renewed" (0 or 1) to indicate subset of CFM areas that were renewed ("implemented")
+
+#load 'renewed' data
+cfm_pre05_renewed <- read_csv('data/CFM_pre05_renewed.csv') #attribute table from CFM pre-2005 shp
+
+renewed <- cfm_pre05_renewed %>%
+  dplyr::select(ID, RENEWED)
+
+cfm_90m_data <- left_join(cfm_90m_data, renewed, by = c("cfm_id" = "ID"))
+
+pa_90m_data$RENEWED <- 0 #number of columns in PA and CFM datasets must match
 
 
 # Filter out sample points that are in overlapping PA and CFM areas
@@ -155,6 +185,11 @@ cfm_90m_filter$PA <- 0
 pa_90m_filter$CFM <- 0
 pa_90m_filter$PA <- 1
 
+#create version of CFM data with only renewed (implemented) CFM sites
+cfm_90m_renewed <- cfm_90m_filter %>%
+  filter(cfm_90m_filter$RENEWED==1) #include only rows where RENEWED == 1 #includes only 6,112 observations
+unique(cfm_90m_renewed$RENEWED) #check if worked - only 1 values returned, worked
+
 # join tables
 
 names(cfm_90m_filter) #check if column variables are identical, looks good
@@ -165,8 +200,10 @@ cfm_pa_data_90m <- full_join(cfm_90m_filter, pa_90m_filter) #full_join includes 
 cfm_pa_data_90m_no_na <- drop_na(cfm_pa_data_90m) #remove sample points with NA values #NOTE lose around 10,000 observations
 
 #write to CSV
-write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_6July2022.csv') #update date
+write_csv(cfm_pa_data_90m_no_na,'outputs/cfm_pa_data_90m_no_na_7July2022.csv') #update date, this includes all CFM sample points
+
 #write_csv(cfm_pa_data_90m,'outputs/cfm_pa_data_90m_17Mar2022.csv') #version with NA values
+
 
 # Define treatment
 
@@ -379,14 +416,15 @@ CFM_data$UID <- do.call(paste0, CFM_data[c("PA_CFM", "ID")])
 View(PA_data)
 View(CFM_data)
 
-#add new variable to CFM data: "renewed" (0 or 1) to indicate subset of CFM areas that were renewed ("implemented")
-
-cfm_pre05_renewed <- read_csv('data/CFM_pre05_renewed.csv') #attribute table from CFM pre-2005 shp
-renewed <- cfm_pre05_renewed %>%
-  dplyr::select(ID, RENEWED)
-CFM_data <- left_join(CFM_data, renewed, by = c("cfm_id" = "ID"))
-
-PA_data$RENEWED <- 0 #number of columns must match
+# #add new variable to CFM data: "renewed" (0 or 1) to indicate subset of CFM areas that were renewed ("implemented")
+# #NOTE this step needs to be performed prior to matching
+# 
+# cfm_pre05_renewed <- read_csv('data/CFM_pre05_renewed.csv') #attribute table from CFM pre-2005 shp
+# renewed <- cfm_pre05_renewed %>%
+#   dplyr::select(ID, RENEWED)
+# CFM_data <- left_join(CFM_data, renewed, by = c("cfm_id" = "ID"))
+# 
+# PA_data$RENEWED <- 0 #number of columns must match
 
 #join the tables back together
 matched_bind <- rbind(PA_data, CFM_data)
