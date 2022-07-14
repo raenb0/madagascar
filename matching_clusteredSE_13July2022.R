@@ -395,7 +395,7 @@ matched_longer <- matched_bind %>%
   pivot_longer(
     cols = defor.1:wind.2,
     names_to = c("timevariant", "period"),
-    names_pattern = "([A-Za-z]+).(\\d+)",
+    names_pattern = "([A-Za-z]+).(\\d+)", #([A-Za-z]+) indicates any letters, (\\d+) indicates numbers (year)
     values_to = "timevariant_values"
   )
 
@@ -428,8 +428,16 @@ matched_wider <- read_csv('outputs/matched_wider_13July2022.csv') #update date
 
 names(matched_wider) #edge was strongly correlated with other variables, threw an error, so I removed it
 
+#add a new alphanumeric variable: "cluster" with the format cfm00pa00
+names(matched_wider)
+matched_wider$cluster <- do.call(paste0, c("cfm", matched_wider["cfm_id"], "pa", matched_wider["pa_id"]))
+view(matched_wider)
+
+#write to CSV
+write_csv(matched_wider,'outputs/matched_wider_cluster_13July2022.csv') #update date
+
 did_m1 <- plm(defor ~ CFM*period + pop + riceav + ricesd + drght + maxprecip + temp + wind, 
-              data = matched_wider, 
+              data = matched_wider,
               effect="twoways", 
               model = "within", 
               index = c("UID", "period"))
@@ -439,10 +447,28 @@ summary(did_m1)
 #Error when I included "edge" variable
 #This results from linearly dependent columns, i.e. strongly correlated variables. Examine the pairwise covariance (or correlation) of your variables to investigate if there are any variables that can potentially be removed. You're looking for covariances (or correlations) >> 0. Alternatively, you can probably automate this variable selection by using a forward stepwise regression.
 
+#try package "broom" to output regression summary table
+library(broom)
+did_m1_summary <- broom::tidy(did_m1)
+
+#write to CSV
+write_csv(did_m1_summary,'outputs/did_m1_summary_13July2022.csv') #update date!
+
+
 
 #### CLUSTERED SE -------------------
 #code adapted from Ranaivo
 #Stephen Parry from CSCU says try this instead: https://stats.stackexchange.com/questions/10017/standard-error-clustering-in-r-either-manually-or-in-plm
+
+#try one approach
+library(lmtest)
+
+startTime <- Sys.time() 
+coeftest(did_m1, vcov=vcovHC(did_m1,type="HC0",cluster="cluster")) #Error in match.arg(cluster) : 'arg' should be one of “group”, “time”
+endTime <- Sys.time()
+print(endTime - startTime)
+
+#try a different approach
 
 #load data if needed
 matched_wider <- read_csv('outputs/matched_wider_13July2022.csv') #update date
@@ -454,6 +480,7 @@ view(matched_wider)
 
 #write to CSV
 write_csv(matched_wider,'outputs/matched_wider_cluster_13July2022.csv') #update date
+
 
 memory.limit(size=5000000)
 
@@ -494,6 +521,12 @@ did_m2 <- plm(dens ~ CFM*period + pop + riceav + ricesd + drght + maxprecip + te
 
 summary(did_m2)
 
+#try package "broom" to output regression summary table
+library(broom)
+did_m2_summary <- broom::tidy(did_m2)
+
+#write to CSV
+write_csv(did_m2_summary,'outputs/did_m2_summary_13July2022.csv') #update date!
 
 
 
@@ -538,7 +571,7 @@ w_matched_yr$defor2017 <- w_matched_yr$for2016-w_matched_yr$for2017
 
 names(w_matched_yr)
 
-#Select desired variables, reorder columns, including riceavg2011 and ricesd2016 which are out of order
+#Select desired variables, reorder columns
 
 w_matched_yr_subs <- w_matched_yr %>%
   dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, dist_vil, DVSP, edge05, edge10, edge14, fordens2005, fordens2010, fordens2014, elev, rice, precip_av, slope, veg_type, for2005:for2017, defor2005:defor2017, pop2005:pop2017, riceav2005:riceav2017, ricesd2005:ricesd2017, drght2005:drght2017, precip2005:precip2017, temp2005:temp2017, wind2005:wind2017)
@@ -577,14 +610,11 @@ w_matched_yr_bind <- rbind(PA_data_yr, CFM_data_yr)
 View(w_matched_yr_bind)
 
 
-
-
-
 # reorganize based on https://dcl-wrangle.stanford.edu/pivot-advanced.html
 #this works but the time variant variables are all in a single column, "timevariant"
 w_matched_yr_longer <- w_matched_yr_bind %>%
   pivot_longer(
-    cols = for2005:wind2017, #added new variables here
+    cols = for2005:wind2017,
     names_to = c("timevariant", "year"),
     names_pattern = "([A-Za-z]+)(\\d+)",
     values_to = "timevariant_values"
@@ -626,16 +656,21 @@ w_matched_yr_wider <- read_csv('outputs/w_matched_yr_wider_13July2022.csv') #upd
 
 names(w_matched_yr_wider)
 
-#add variable "time" which takes values 1-13 for years 2005-2017 #doesn't work
-#w_matched_yr_wider$time <- w_matched_yr_wider$year - 2004 
-#Error in w_matched_yr_wider$year - 2004 : 
-#non-numeric argument to binary operator
+# convert rice prices to Malagasy Ariary instead of USD (update July 14 2022)
 
-#View(w_matched_yr_wider)
+MDG_exchange <- read_csv("data/MDG_exchange_rates.csv")
 
-did_m1_yr <- plm(defor ~ CFM*year + pop + riceav + ricesd + drght + precip + temp + wind, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year"))
+w_matched_yr_wider_exchange <- left_join(w_matched_yr_wider, MDG_exchange, by = c("year" = "Year")) %>%
+  mutate(riceav_mdg = riceav*Exchange_rate) %>%
+  mutate(ricesd_mdg = ricesd*Exchange_rate)
 
-#did_m1_yr <- plm(forest ~ CFM*year + pop + riceavg + ricesd, data = w_matched_yr_wider, effect="twoways", model = "within", index = c("UID", "year")) #original version looked at forest cover, not defor
+#run the DiD model
+
+did_m1_yr <- plm(defor ~ CFM*year + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind, 
+                 data = w_matched_yr_wider_exchange, #updated with exchange rate
+                 effect="twoways", 
+                 model = "within", 
+                 index = c("UID", "year"))
 
 summary(did_m1_yr)
 
@@ -645,7 +680,7 @@ library(broom)
 did_m1_yr_summary <- broom::tidy(did_m1_yr)
 
 #write to CSV
-write_csv(did_m1_yr_summary,'outputs/did_m1_yr_summary_13July2022.csv') #update date!
+write_csv(did_m1_yr_summary,'outputs/did_m1_yr_summary_14July2022.csv') #update date!
 
 
 
