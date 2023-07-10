@@ -20,9 +20,9 @@ pa_90m_data <- read_csv("outputs/pa_points_data_6Jan2023.csv") #update date
 
 # read in 270m data
 
-#cfm_90m_data <- read_csv("outputs/cfm_points_data_270m_7Jan2023.csv") #update date
-#cfm_rnw_90m_data <- read_csv("outputs/cfm_rnw_points_data_270m_7Jan2023.csv") #update date
-#pa_90m_data <- read_csv("outputs/pa_points_data_270m_7Jan2023.csv") #update date
+#cfm_270m_data <- read_csv("outputs/cfm_points_data_270m_7Jan2023.csv") #update date
+#cfm_rnw_270m_data <- read_csv("outputs/cfm_rnw_points_data_270m_7Jan2023.csv") #update date
+#pa_270m_data <- read_csv("outputs/pa_points_data_270m_7Jan2023.csv") #update date
 
 
 # Data wrangling --------------------------------------------------------
@@ -335,16 +335,8 @@ matched_yr_wider <- matched_yr_longer %>%
     values_from = "timevariant_values"
   )
 
-#write to CSV
-write_csv(matched_yr_wider,'outputs/matched_yr_wider_90m_genetic_27Feb2023.csv') #update date!
-
 
 ### Convert rice prices to Malagasy Ariary instead of USD --------------------------
-
-#load matched data if needed
-matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_27Feb2023.csv') #update date!
-
-names(matched_yr_wider)
 
 MDG_exchange <- read_csv("data/MDG_exchange_rates.csv")
 
@@ -400,13 +392,8 @@ matched_yr_wider <- matched_yr_wider %>%
   mutate(RENEWED = replace(as.numeric(RENEWED), which(is.na(RENEWED)), 0))  #replace NA values with 0
 unique(matched_yr_wider$RENEWED)
 
-#write to CSV
-write_csv(matched_yr_wider,'outputs/matched_yr_wider_90m_genetic_27Feb2023.csv') #update date
-
 
 ## Calculate ANNUAL defor (not CUMULATIVE defor) in each year -------------------
-matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_27Feb2023.csv') #update date
-names(matched_yr_wider)
 
 #test on a subset
 matched_subset <- matched_yr_wider %>%
@@ -428,9 +415,6 @@ matched_yr_wider <- matched_yr_wider %>%
 matched_yr_wider <- matched_yr_wider %>%
   mutate(defor_annual = case_when(year==2005 ~ defor,
                                   year > 2005 ~ defor-defor_lag))
-
-#write to CSV
-write_csv(matched_yr_wider,'outputs/matched_yr_wider_90m_genetic_defor_annual_27Feb2023.csv') #update date
 
 ## Include variables for development, security ----------------------
 
@@ -467,11 +451,14 @@ matched_yr_wider <- matched_yr_wider %>%
   mutate(security = ifelse(v7security > 2, "1","0")) #used median value of CFM as threshold
 
 names(matched_yr_wider) #includes development, security
-write_csv(matched_yr_wider,'outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
 
 #check mean urban distance for CFM, MNP pixels after matching
-matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
 
 matched_cfm_pa_urbandist_summary <- matched_yr_wider %>%
   group_by(CFM) %>%
   summarize(mean_urban_dist = mean(disturb), stdev_urban_dist = sd(disturb))
+
+#write to CSV
+write_csv(matched_yr_wider,'outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
+
+

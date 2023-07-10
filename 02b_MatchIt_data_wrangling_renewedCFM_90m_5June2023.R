@@ -74,7 +74,7 @@ saveRDS(m.out4.rnw, file = "outputs/m.out4.rnw.rds") #save it as an RDS file
 genetic.matches.rnw <- get_matches(m.out4.rnw, data = cfm_rnw_pa_data_90m_no_na, distance = "mahalanobis")
 
 #write to CSV
-write_csv(genetic.matches.rnw,'outputs/genetic.matches.rnw_pop_size_500_12Feb2023.csv') #update date, all CFM sample points
+write_csv(genetic.matches.rnw,'outputs/genetic.matches.rnw_12Feb2023.csv') #update date, all CFM sample points
 
 
 # check for pseudoreplication in matched data (renewed CFM only) -------------------------
@@ -205,13 +205,13 @@ matched_yr_rnw_wider <- matched_yr_rnw_longer %>%
 View(matched_yr_rnw_wider)
 
 #write to CSV
-write_csv(matched_yr_rnw_wider,'outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date!
+# write_csv(matched_yr_rnw_wider,'outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date!
 
 
 ### convert rice prices to Malagasy Ariary instead of USD ------------------------
 
 #load data if needed
-matched_yr_rnw_wider <- read_csv('outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date!
+# matched_yr_rnw_wider <- read_csv('outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date!
 
 MDG_exchange <- read_csv("data/MDG_exchange_rates.csv")
 
@@ -262,11 +262,12 @@ matched_yr_rnw_wider$year <- as.factor(matched_yr_rnw_wider$year) #convert "year
 #view(matched_yr_rnw_wider)
 
 #write to CSV
-write_csv(matched_yr_rnw_wider,'outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date
+# write_csv(matched_yr_rnw_wider,'outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date
 
 
 # Calculate ANNUAL defor (not CUMULATIVE defor) in each year, renewed CFM -------------------
-matched_yr_rnw_wider <- read_csv('outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date
+# load data if needed
+# matched_yr_rnw_wider <- read_csv('outputs/matched_yr_rnw_wider_genetic_forest_13Feb2023.csv') #update date
 names(matched_yr_rnw_wider)
 
 #test on a subset
