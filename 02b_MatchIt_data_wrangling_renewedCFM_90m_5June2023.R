@@ -309,7 +309,7 @@ matched_yr_rnw_wider <- matched_yr_rnw_wider %>%
 write_csv(matched_yr_rnw_wider,'outputs/matched_yr_rnw_wider_90m_genetic_defor_annual_development_security_2Mar2023.csv') #update date
 
 # Plot deforestation in matched CFM, PA pixels -----------------
-matched_yr_rnw_wider <- read_csv('outputs/matched_yr_rnw_wider_90m_genetic_defor_annual_development_security_2Mar2023.csv') #update date
+# matched_yr_rnw_wider <- read_csv('outputs/matched_yr_rnw_wider_90m_genetic_defor_annual_development_security_2Mar2023.csv') #update date
 
 defor_rnw_plot1 <- matched_yr_rnw_wider %>%
   group_by(year, PACFM) %>%

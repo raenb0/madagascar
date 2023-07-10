@@ -5,13 +5,11 @@
 
 
 # Check parallel trends in the pre-crisis period --------------------------
-# Note from Chris: We need conditional parallel trends. One way to test is, as they suggested, to use ONLY the pre-event sub sample of matched observations and include all control variables that you use in the main regression of interest, a trend variable t that increases with each year of observation (it doesn’t matter if you use 0,1,2,… or 2004, 2005, 2006 … or some other, increasing, linear trend function) plus a dummy variable for the CFM sites plus the t*CFM interaction term. A test of the null hypothesis that the coefficient on that interaction term equals zero is a test of parallel trends, conditional on all the controls we use, in the pre-event period. 
 
 library(tidyverse)
 library(fixest)
 
-
-matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_27Feb2023.csv') #update date
+matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
 names(matched_yr_wider)
 matched_yr_pre_crisis <- matched_yr_wider %>% filter(year < 2010) #note year is not a factor in this version
 matched_yr_pre_crisis$year <- as.factor(matched_yr_pre_crisis$year) #convert "year" to a factor
@@ -75,7 +73,7 @@ for (j in 1:4){  #this refers to coefficients 1:4 (year2006 to year2009)
 round(ci_table_pre_crisis,5)
 
 ## DiD (annual) without a variable for yrs_post_crisis -----------
-
+# We initially used a DiD but moved to an event study design as it better controls for differences in pre-crisis trends, see below
 matched_yr_wider$year <- as.factor(matched_yr_wider$year) #convert "year" to a factor
 
 did_m1_yr <- feols(defor_annual ~ CFM*year + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind
@@ -84,14 +82,10 @@ did_m1_yr <- feols(defor_annual ~ CFM*year + distance + pop + riceav_mdg + rices
                               cluster = "cluster") 
 summary(did_m1_yr)
 
-#tidy and save table
-library(broom)
-library(gtools)
 
 #calculate the correct SE to plot DiD MNP and CFM coefficients
 covariances_did_m1 <- vcov(did_m1_yr) #save variance-covariance table
 
-# code from Sumanta Basu (see below)
 calc_se <- function(varcov, vars){
   return(sqrt(sum(varcov[vars, vars])))
 }
@@ -104,8 +98,6 @@ calc_ci <- function(coef, varcov, vars, ci_level = 0.95){
   ci_hi = sum(coef[vars]) + multiplier*se
   return(c(ci_lo, ci_hi))
 }
-
-
 
 did_m1_yr_table <-tidy(did_m1_yr) %>%
   mutate(signif = stars.pval(p.value))
@@ -121,7 +113,7 @@ library(tidyverse)
 library(fixest)
 
 #load data if necessary
-matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_27Feb2023.csv') #update date
+matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
 
 names(matched_yr_wider)
 
@@ -138,7 +130,8 @@ event_study_m1 <- feols(defor_annual ~ CFM*year + CFM*yrs_post_crisis #year (num
                         data = matched_yr_wider,
                         cluster = "cluster")
 summary(event_study_m1)
-# Chris said: test whether the sum of coefficients are jointly significantly greater than 0
+
+# test whether the sum of coefficients are jointly significantly greater than 0
 event_study_m1_coefficients_sum <- sum(event_study_m1$coefficients) #0.2262255 greater than 0, yes
 
 #### Generate variance-covariance table to calculate correct SE ----------------
@@ -152,7 +145,7 @@ covariances_excel <- covariances_m1 %>%
 write_csv(covariances_excel, "outputs/covariances_event_study_m1_30May2023.csv") #update date
 
 
-#### Calculate SE from variance-covariance matrix, code: Sumanta Basu, CSCU ---------------------
+#### Calculate SE from variance-covariance matrix  ---------------------
 # vcov: variance-covariance matrix
 # vars: a vector with the indices of regression predictors to add
 # returns the standard error of the sum of betas
@@ -283,7 +276,7 @@ summary(event_study_m4)
 
 ### Event study model 5, with interaction term for population density --------------
 event_study_m5 <- feols(defor_annual ~ CFM*timestep + CFM*yrs_post_crisis
-                        + CFM*yrs_post_crisis*pop #interaction term for population **note time-variant variable??
+                        + CFM*yrs_post_crisis*pop #interaction term for population
                         + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind
                         | UID,
                         data = matched_yr_wider,
@@ -321,19 +314,11 @@ summary(event_study_m8) #coefficients are not significant
 library(broom)
 library(gtools)
 
-# #DiD models
+# #DiD model
 # did_m1_table <-tidy(did_m1) %>%
 #   mutate(signif = stars.pval(p.value))
-# did_m2_table <-tidy(did_m2) %>%
-#   mutate(signif = stars.pval(p.value))
-# did_m3_table <-tidy(did_m3) %>%
-#   mutate(signif = stars.pval(p.value))
-# did_m4_table <-tidy(did_m4) %>%
-#   mutate(signif = stars.pval(p.value))
 # write_csv(did_m1_table, "outputs/did_m1_genetic_defor_annual_27Feb2023.csv") #update date
-# write_csv(did_m2_table, "outputs/did_m2_genetic_defor_annual_27Feb2023.csv") #update date
-# write_csv(did_m3_table, "outputs/did_m3_genetic_defor_annual_27Feb2023.csv") #update date
-# write_csv(did_m4_table, "outputs/did_m4_genetic_defor_annual_27Feb2023.csv") #update date
+
 
 #event study models
 event_study_m1_table <- tidy(event_study_m1) %>%
@@ -497,51 +482,3 @@ ggplot(Fig.data.5, mapping = aes(CFM_year,Coeff))+
   labs(x = "Year", y = "Coefficient of interaction of CFM, years post crisis, and population")+
   ggtitle("Coefficients of interaction of CFM, years post crisis, population on annual deforestation")+
   theme_minimal()
-
-# Rosenbaum bounds sensitivity analysis -----------------------------------
-# Note from Ranaivo:
-# Thinking about the project, I do not think we need to do robustness checks (related to unobserved bias). The identification assumption in our design is parallel trends. Unparallel trends are the manifestation of unobserved bias in a DiD design (and also event study design, which is quite close to DiD. Some people call event study "dynamic DiD" or "DiD event study" ). What I mean is testing for parallel trends is testing for unobserved bias (you can see the book Mixtape by Scott Cunningham in the DiD chapter if you want to know more about that). And because we already control for parallel trend in the model, I do not see any reason why we need to further test for it. We may just need to be clear that we assume linear trends. If there was any robustness check we may want to do, it would be to check how linear the trends are.
-
-library(rbounds)
-
-#load data if necessary
-PA_data_yr <- read_csv('outputs/PA_data_yr_90m_genetic_27Feb2023.csv') #update date
-CFM_data_yr <- read_csv('outputs/CFM_data_yr_90m_genetic_27Feb2023.csv') #update date
-
-#hlsens(x, y, pr = 0.5, Gamma = 1.5, GammaInc = 0.1)
-#x = treatment group outcomes in same order as treatment group
-#y = control group outcomes in same order as treatment group
-#pr = search precision parameter, *Keele 2010 says set pr to 0.5 for large datasets
-#Gamma = upper bound on gamma parameter (example from Keele 2010: 1.5)
-#GammaInc = To set user specified increments for gamma parameter (example: 0.1)
-# Keele 2010: "In the analysis, I set the maximum value for[Gamma] to 1.5 with increments of 0.1. These values are a good starting place for many data sets in the social sciences."
-
-names(PA_data_yr)
-names(CFM_data_yr)
-
-#create an outcome variable for defor 2009-2014 (crisis period only)
-PA_data_yr <- PA_data_yr %>%
-  mutate(defor_2009_2014 = defor2014 - defor2009)
-CFM_data_yr <- CFM_data_yr %>%
-  mutate(defor_2009_2014 = defor2014 - defor2009)
-
-hlsens(CFM_data_yr$defor_2009_2014, PA_data_yr$defor_2009_2014, pr = 0.5, Gamma = 1.1, GammaInc = 0.01)
-#highly sensitive to bias (only a Gamma of 1.01 and the estimate bounds 0)
-
-#create an outcome variable for defor 2005-2014 (pre-crisis and crisis period)
-PA_data_yr <- PA_data_yr %>%
-  mutate(defor_2005_2014 = defor2014 - defor2005)
-CFM_data_yr <- CFM_data_yr %>%
-  mutate(defor_2005_2014 = defor2014 - defor2005)
-
-hlsens(CFM_data_yr$defor_2005_2014, PA_data_yr$defor_2005_2014, pr = 0.5, Gamma = 1.1, GammaInc = 0.01)
-#highly sensitive to bias (only a Gamma of 1.01 and the estimate bounds 0)
-
-#create an outcome variable for defor 2005-2020 (entire study period)
-PA_data_yr <- PA_data_yr %>%
-  mutate(defor_2005_2020 = defor2020 - defor2005)
-CFM_data_yr <- CFM_data_yr %>%
-  mutate(defor_2005_2020 = defor2020 - defor2005)
-
-hlsens(CFM_data_yr$defor_2005_2020, PA_data_yr$defor_2005_2020, pr = 0.5, Gamma = 1.1, GammaInc = 0.01)
-#highly sensitive to bias (only a Gamma of 1.01 and the estimate bounds 0)

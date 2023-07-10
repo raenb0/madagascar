@@ -737,3 +737,53 @@ library(gtools)
 event_study_m1_pre_trends_table <- tidy(event_study_m1_pre_trends) %>%
   mutate(signif = stars.pval(p.value))
 write_csv(event_study_m1_pre_trends_table, "outputs/event_study_m1_pre_trends_2May2023.csv") #update date
+
+
+
+# Rosenbaum bounds sensitivity analysis -----------------------------------
+# Note from Ranaivo:
+# Thinking about the project, I do not think we need to do robustness checks (related to unobserved bias). The identification assumption in our design is parallel trends. Unparallel trends are the manifestation of unobserved bias in a DiD design (and also event study design, which is quite close to DiD. Some people call event study "dynamic DiD" or "DiD event study" ). What I mean is testing for parallel trends is testing for unobserved bias (you can see the book Mixtape by Scott Cunningham in the DiD chapter if you want to know more about that). And because we already control for parallel trend in the model, I do not see any reason why we need to further test for it. We may just need to be clear that we assume linear trends. If there was any robustness check we may want to do, it would be to check how linear the trends are.
+
+library(rbounds)
+
+#load data if necessary
+PA_data_yr <- read_csv('outputs/PA_data_yr_90m_genetic_27Feb2023.csv') #update date
+CFM_data_yr <- read_csv('outputs/CFM_data_yr_90m_genetic_27Feb2023.csv') #update date
+
+#hlsens(x, y, pr = 0.5, Gamma = 1.5, GammaInc = 0.1)
+#x = treatment group outcomes in same order as treatment group
+#y = control group outcomes in same order as treatment group
+#pr = search precision parameter, *Keele 2010 says set pr to 0.5 for large datasets
+#Gamma = upper bound on gamma parameter (example from Keele 2010: 1.5)
+#GammaInc = To set user specified increments for gamma parameter (example: 0.1)
+# Keele 2010: "In the analysis, I set the maximum value for[Gamma] to 1.5 with increments of 0.1. These values are a good starting place for many data sets in the social sciences."
+
+names(PA_data_yr)
+names(CFM_data_yr)
+
+#create an outcome variable for defor 2009-2014 (crisis period only)
+PA_data_yr <- PA_data_yr %>%
+  mutate(defor_2009_2014 = defor2014 - defor2009)
+CFM_data_yr <- CFM_data_yr %>%
+  mutate(defor_2009_2014 = defor2014 - defor2009)
+
+hlsens(CFM_data_yr$defor_2009_2014, PA_data_yr$defor_2009_2014, pr = 0.5, Gamma = 1.1, GammaInc = 0.01)
+#highly sensitive to bias (only a Gamma of 1.01 and the estimate bounds 0)
+
+#create an outcome variable for defor 2005-2014 (pre-crisis and crisis period)
+PA_data_yr <- PA_data_yr %>%
+  mutate(defor_2005_2014 = defor2014 - defor2005)
+CFM_data_yr <- CFM_data_yr %>%
+  mutate(defor_2005_2014 = defor2014 - defor2005)
+
+hlsens(CFM_data_yr$defor_2005_2014, PA_data_yr$defor_2005_2014, pr = 0.5, Gamma = 1.1, GammaInc = 0.01)
+#highly sensitive to bias (only a Gamma of 1.01 and the estimate bounds 0)
+
+#create an outcome variable for defor 2005-2020 (entire study period)
+PA_data_yr <- PA_data_yr %>%
+  mutate(defor_2005_2020 = defor2020 - defor2005)
+CFM_data_yr <- CFM_data_yr %>%
+  mutate(defor_2005_2020 = defor2020 - defor2005)
+
+hlsens(CFM_data_yr$defor_2005_2020, PA_data_yr$defor_2005_2020, pr = 0.5, Gamma = 1.1, GammaInc = 0.01)
+#highly sensitive to bias (only a Gamma of 1.01 and the estimate bounds 0)
