@@ -1,0 +1,153 @@
+# Convert rice prices to Madagascar currency ------------------------------
+
+#load data if needed
+
+matched <- read_csv('outputs/mahalanobis_matched_13July2022.csv') #update date
+names(matched)
+
+#drop extra years and re-order data
+# cfm_pa_data_subs <- cfm_pa_data_90m_no_na %>%
+#   dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, DVSP, dist_vil, elev, precip, rice, slope, veg_type, edge10:edge14, fordens2005:fordens2014, for2005:for2017, drght2005:drght2017, pop2005:pop2017, precip2005:precip2017, riceav2005:riceav2017, ricesd2005:ricesd2017, temp2005:temp2017, wind2005:wind2017)
+#names(cfm_pa_data_subs)
+
+matched_subs <- matched %>%
+  dplyr::select(CFM, PA, cfm_id, pa_id, dist_cart, dist_road, dist_urb, DVSP, dist_vil, elev, precip, rice, slope, veg_type, edge10:edge14, fordens2005:fordens2014, for2005:for2017, drght2005:drght2017, pop2005:pop2017, precip2005:precip2017, riceav2005:riceav2017, ricesd2005:ricesd2017, temp2005:temp2017, wind2005:wind2017)
+
+names(matched_subs)
+
+#rename "precip" variable so it doesn't cause issues later
+#cfm_pa_data_subs <- rename(cfm_pa_data_subs,
+#                       precip_av = precip)
+
+matched_subs <- rename(matched_subs,
+                       precip_av = precip)
+
+#subset data to split up PA and CFM data
+
+#for PA data:
+PA_data <- matched_subs %>%
+  filter(CFM==0)
+
+#for CFM data:
+
+CFM_data <- matched_subs %>%
+  filter(CFM==1)
+
+#add unique ID columns to each subset:
+PA_data$ID <- seq.int(nrow(PA_data))
+CFM_data$ID <- seq.int(nrow(CFM_data))
+
+#add new variable PA_CFM
+PA_data$PA_CFM <- "PA"
+CFM_data$PA_CFM <- "CFM"
+
+#create character strings for new unique IDs
+PA_data$UID <- do.call(paste0, PA_data[c("PA_CFM", "ID")])
+CFM_data$UID <- do.call(paste0, CFM_data[c("PA_CFM", "ID")])
+
+#check to make sure they look ok
+View(PA_data)
+View(CFM_data)
+
+#join the tables back together
+matched_UID <- rbind(PA_data, CFM_data)
+View(matched_UID)
+
+names(matched_UID)
+
+#pivot longer
+matched_longer <- matched_UID %>%
+  pivot_longer(
+    cols = for2005:wind2017,
+    names_to = c("timevariant", "year"),
+    names_pattern = "([A-Za-z]+)(\\d+)",
+    values_to = "timevariant_values"
+  )
+
+#View
+View(matched_longer)
+
+#now pivot wider to get time variant variables as columns instead of rows
+matched_wider <- matched_longer %>%
+  pivot_wider(
+    names_from = "timevariant",
+    values_from = "timevariant_values"
+  )
+
+#View
+View(matched_wider) #WORKED!
+
+matched_wider <- matched_wider %>% mutate(year = as.double(year)) #convert year to numeric format
+
+#load exchange rate data
+MDG_exchange <- read_csv("data/MDG_exchange_rates.csv")
+
+matched_exch <- left_join(matched_wider, MDG_exchange, by = c("year" = "Year")) %>%
+  mutate(riceav_mdg = riceav*Exchange_rate) %>%
+  mutate(ricesd_mdg = ricesd*Exchange_rate)
+
+names(matched_exch)
+
+#write to CSV
+
+write_csv(matched_exch, 'outputs/matched_exch_25July2022.csv') #update date
+
+
+
+#Clustered SE approach using lmtest package 
+#Stephen Parry from CSCU suggested this: https://stats.stackexchange.com/questions/10017/standard-error-clustering-in-r-either-manually-or-in-plm
+# (doesn't work, because with this approach plm index variable must be used to cluster, and we want to cluster on "cluster", not "UID")
+
+library(lmtest)
+library(sandwich)
+
+startTime <- Sys.time() 
+coeftest(did_m1, vcov=vcovHC(did_m1,type="HC0",cluster="cluster")) #Error in match.arg(cluster) : 'arg' should be one of “group”, “time”
+endTime <- Sys.time()
+print(endTime - startTime)
+
+#hint: issue explained https://stats.stackexchange.com/questions/477332/r-plm-cluster-robust-standard-errors-with-multiple-imputations
+#It is possible to cluster standard errors at a level other than the "group" or "time" indices of the plm model (e.g. industry). 
+#You would need to use the vcovCR function in the clubSandwich R package. Here is some example code I used: vcovCR(mypanelmodel, PanelData$Owner_ID,type="CR2").
+
+#code adapted from Ranaivo
+#try the vcovCR approach
+library(tidyverse)
+library(dplyr)
+#library(lmtest)
+#library(sandwich)
+library(clubSandwich)
+
+#load data if needed
+matched_wider <- read_csv('outputs/matched_wider_26July2022.csv') #update date
+
+#add a new alphanumeric variable: "cluster" with the format cfm00pa00
+names(matched_wider)
+matched_wider$cluster <- do.call(paste0, c("cfm", matched_wider["cfm_id"], "pa", matched_wider["pa_id"]))
+matched_wider$cluster <- as.factor(matched_wider$cluster) #convert "cluster" to a factor
+view(matched_wider)
+
+#write to CSV
+write_csv(matched_wider,'outputs/matched_wider_cluster_26July2022.csv') #update date
+
+memory.limit(size=5000000)
+
+#clustering SE #takes a long time
+#doesn't work due to memory issues: "Error: cannot allocate vector of size 4.0 Gb"
+
+startTime <- Sys.time() #to record time required to run this
+V_CR2 <- vcovCR(did_m1, cluster=matched_wider$cluster, type="CR2") # clustering SE. "clusterID": CFM site or PA identification code in the data 
+endTime <- Sys.time()
+print(endTime - startTime) #took 1.6 hours, then threw an error
+
+#p-values
+startTime <- Sys.time()
+coef_test(did_m1, vcov=V_CR2, test="Satterthwaite") # p-values, also took a long time to run
+endTime <- Sys.time()
+print(endTime - startTime)
+      
+#95% CI
+startTime <- Sys.time()
+conf_int(did_m1, vcov=V_CR2, test="Satterthwaite") # 95% CI. I personally prefer presenting CI because of all the controversies surrounding p-values
+endTime <- Sys.time()
+print(endTime - startTime)
