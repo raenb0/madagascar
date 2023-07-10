@@ -692,114 +692,117 @@ write_csv(cfm_rnw_points_data_270m_corrected, 'outputs/cfm_rnw_points_data_270m_
 
 
 
-## ADD OUTCOME VARIABLE: FOREST COVER to 270m data ----------------------------
-library(terra)
-library(tidyverse)
+# ## ADD OUTCOME VARIABLE: FOREST COVER to 270m data ----------------------------
+# This step not necessary unless you want to calculate annual forest cover instead of deforestation
+# We used annual deforestation as it's a stationary variable, while forest cover is non-stationary because the mean value declines over time
 
-#load sample points
-cfm_points <- vect('data/sample_points/cfm_for05_pts_id.shp')
-cfm_rnw_points <- vect('data/sample_points/cfm_rnw_pts_id.shp')
-pa_points <- vect('data/sample_points/pa_for05_pts_id.shp')
-
-#load csv files
-cfm_points_data_270m <- read_csv('outputs/cfm_points_data_270m_6Jan2023.csv') #update date
-pa_points_data_270m <- read_csv('outputs/pa_points_data_270m_6Jan2023.csv') #update date
-cfm_rnw_points_data_270m <- read_csv('outputs/cfm_rnw_points_data_270m_6Jan2023.csv') #update date
-
-# # load annual forest cover data ***Note this is 90m, need 270m**
+# library(terra)
+# library(tidyverse)
+# 
+# #load sample points
+# cfm_points <- vect('data/sample_points/cfm_for05_pts_id.shp')
+# cfm_rnw_points <- vect('data/sample_points/cfm_rnw_pts_id.shp')
+# pa_points <- vect('data/sample_points/pa_for05_pts_id.shp')
+# 
+# #load csv files
+# cfm_points_data_270m <- read_csv('outputs/cfm_points_data_270m_6Jan2023.csv') #update date
+# pa_points_data_270m <- read_csv('outputs/pa_points_data_270m_6Jan2023.csv') #update date
+# cfm_rnw_points_data_270m <- read_csv('outputs/cfm_rnw_points_data_270m_6Jan2023.csv') #update date
+# 
+# # # load annual forest cover data ***Note this is 90m, need 270m**
+# # filelist_temp <- list.files(path = "data/forest_cover_hansen_90m", pattern = "*.tif$", full.names = T) #lists the files
+# # forest_stack <- rast(filelist_temp) #creates a single SpatRaster with 20 fields
+# # names_temp <- list.files(path = "data/forest_cover_hansen_90m", pattern = "*.tif$", full.names = F)
+# # names(forest_stack) <- names_temp
+# # 
+# # #aggregate 90m forest cover to 270m
+# # startTime <- Sys.time()
+# # forest_stack_270m <- aggregate(forest_stack, fact = 3, fun="mean")
+# # endTime <- Sys.time()
+# # print(endTime - startTime)
+# # 
+# # #save resulting file to TIF #note resulting TIF files had "_90m" in layer names, so I edited them manually
+# # startTime <- Sys.time()
+# # f <- paste0("data/results_270m/forest/", names(forest_stack_270m))
+# # r <- writeRaster(forest_stack_270m, f, overwrite=FALSE)
+# # endTime <- Sys.time()
+# # print(endTime - startTime)
+# 
+# # load annual forest cover data 270m
+# filelist_temp <- list.files(path = "data/results_270m/forest", pattern = "*.tif$", full.names = T) #lists the files
+# forest_stack_270m <- rast(filelist_temp) #creates a single SpatRaster with 20 fields
+# names_temp <- list.files(path = "data/results_270m/forest", pattern = "*.tif$", full.names = F)
+# names(forest_stack_270m) <- names_temp
+# 
+# # extract 270m forest cover to cfm, pa, and cfm_rnw points
+# cfm_points_forest_270m <- terra::extract(forest_stack_270m, cfm_points, xy=T) %>%
+#   rename_with(~ gsub('.tif', '', .x)) #remove .tif from forest columns
+# pa_points_forest_270m <- terra::extract(forest_stack_270m, pa_points, xy=T) %>%
+#   rename_with(~ gsub('.tif', '', .x))
+# cfm_rnw_points_forest_270m <- terra::extract(forest_stack_270m, cfm_rnw_points, xy=T) %>%
+#   rename_with(~ gsub('.tif', '', .x))
+# 
+# #join 270m forest data to other data generated above
+# cfm_points_data_270m <- left_join(cfm_points_data_270m, cfm_points_forest_270m, by='ID')
+# pa_points_data_270m <- left_join(pa_points_data_270m, pa_points_forest_270m, by='ID')
+# cfm_rnw_points_data_270m <- left_join(cfm_rnw_points_data_270m, cfm_rnw_points_forest_270m, by='ID')
+# 
+# #spot check
+# names(cfm_points_data_270m_join)
+# cfm_points_data_270m_subset <- cfm_points_data_270m_join %>%
+#   select(x.x, x.y, y.x, y.y, defor2001,forest2001,defor2002,forest2002,defor2003,forest2003,defor2004,forest2004,defor2005,forest2005,defor2006,forest2006,defor2007,forest2007,defor2008,forest2008,defor2009,forest2009,defor2010,forest2010)
+# view(cfm_points_data_270m_subset) #looks ok
+# 
+# #save to CSV
+# write_csv(cfm_points_data_270m, 'outputs/cfm_points_data_270m_13Feb2023.csv') #update date
+# write_csv(pa_points_data_270m, 'outputs/pa_points_data_270m_13Feb2023.csv') #update date
+# write_csv(cfm_rnw_points_data_270m, 'outputs/cfm_rnw_points_data_270m_13Feb2023.csv') #update date
+# 
+# 
+# # ADD OUTCOME VARIABLE: FOREST COVER: Extract raster values to MATCHED 90m data points ----------------------------
+# library(terra)
+# library(tidyverse)
+# #load matched sample points
+# genetic_matches <- read_csv("outputs/genetic.matches_27Jan2023.csv") #update date, all CFM
+# genetic_matches_rnw <- read_csv("outputs/genetic.matches.rnw_pop_size_500_12Feb2023.csv") #update date, renewed CFM
+# 
+# #terra package, "vect" documentation
+# #You can use a data.frame to make a SpatVector of points
+# #vect(x, geom=c("lon", "lat"), crs="", keepgeom=TRUE)
+# 
+# matched_points <- vect(genetic_matches, geom=c("x","y"), crs="epsg:32738", keepgeom=TRUE) #original crs UTM zone 38S
+# plot(matched_points) #looks good
+# matched_points_rnw <- vect(genetic_matches_rnw, geom=c("x","y"), crs="epsg:32738", keepgeom=TRUE) #renewed CFM
+# 
+# # load annual forest cover data
 # filelist_temp <- list.files(path = "data/forest_cover_hansen_90m", pattern = "*.tif$", full.names = T) #lists the files
 # forest_stack <- rast(filelist_temp) #creates a single SpatRaster with 20 fields
 # names_temp <- list.files(path = "data/forest_cover_hansen_90m", pattern = "*.tif$", full.names = F)
 # names(forest_stack) <- names_temp
 # 
-# #aggregate 90m forest cover to 270m
-# startTime <- Sys.time()
-# forest_stack_270m <- aggregate(forest_stack, fact = 3, fun="mean")
-# endTime <- Sys.time()
-# print(endTime - startTime)
+# #check projections
+# crs(matched_points, describe=T, proj=F)
+# crs(matched_points_rnw, describe=T, proj=F) #renewed CFM
+# crs(forest_stack, describe=T, proj=F)
 # 
-# #save resulting file to TIF #note resulting TIF files had "_90m" in layer names, so I edited them manually
-# startTime <- Sys.time()
-# f <- paste0("data/results_270m/forest/", names(forest_stack_270m))
-# r <- writeRaster(forest_stack_270m, f, overwrite=FALSE)
-# endTime <- Sys.time()
-# print(endTime - startTime)
-
-# load annual forest cover data 270m
-filelist_temp <- list.files(path = "data/results_270m/forest", pattern = "*.tif$", full.names = T) #lists the files
-forest_stack_270m <- rast(filelist_temp) #creates a single SpatRaster with 20 fields
-names_temp <- list.files(path = "data/results_270m/forest", pattern = "*.tif$", full.names = F)
-names(forest_stack_270m) <- names_temp
-
-# extract 270m forest cover to cfm, pa, and cfm_rnw points
-cfm_points_forest_270m <- terra::extract(forest_stack_270m, cfm_points, xy=T) %>%
-  rename_with(~ gsub('.tif', '', .x)) #remove .tif from forest columns
-pa_points_forest_270m <- terra::extract(forest_stack_270m, pa_points, xy=T) %>%
-  rename_with(~ gsub('.tif', '', .x))
-cfm_rnw_points_forest_270m <- terra::extract(forest_stack_270m, cfm_rnw_points, xy=T) %>%
-  rename_with(~ gsub('.tif', '', .x))
-
-#join 270m forest data to other data generated above
-cfm_points_data_270m <- left_join(cfm_points_data_270m, cfm_points_forest_270m, by='ID')
-pa_points_data_270m <- left_join(pa_points_data_270m, pa_points_forest_270m, by='ID')
-cfm_rnw_points_data_270m <- left_join(cfm_rnw_points_data_270m, cfm_rnw_points_forest_270m, by='ID')
-
-#spot check
-names(cfm_points_data_270m_join)
-cfm_points_data_270m_subset <- cfm_points_data_270m_join %>%
-  select(x.x, x.y, y.x, y.y, defor2001,forest2001,defor2002,forest2002,defor2003,forest2003,defor2004,forest2004,defor2005,forest2005,defor2006,forest2006,defor2007,forest2007,defor2008,forest2008,defor2009,forest2009,defor2010,forest2010)
-view(cfm_points_data_270m_subset) #looks ok
-
-#save to CSV
-write_csv(cfm_points_data_270m, 'outputs/cfm_points_data_270m_13Feb2023.csv') #update date
-write_csv(pa_points_data_270m, 'outputs/pa_points_data_270m_13Feb2023.csv') #update date
-write_csv(cfm_rnw_points_data_270m, 'outputs/cfm_rnw_points_data_270m_13Feb2023.csv') #update date
-
-
-# ADD OUTCOME VARIABLE: FOREST COVER: Extract raster values to MATCHED 90m data points ----------------------------
-library(terra)
-library(tidyverse)
-#load matched sample points
-genetic_matches <- read_csv("outputs/genetic.matches_27Jan2023.csv") #update date, all CFM
-genetic_matches_rnw <- read_csv("outputs/genetic.matches.rnw_pop_size_500_12Feb2023.csv") #update date, renewed CFM
-
-#terra package, "vect" documentation
-#You can use a data.frame to make a SpatVector of points
-#vect(x, geom=c("lon", "lat"), crs="", keepgeom=TRUE)
-
-matched_points <- vect(genetic_matches, geom=c("x","y"), crs="epsg:32738", keepgeom=TRUE) #original crs UTM zone 38S
-plot(matched_points) #looks good
-matched_points_rnw <- vect(genetic_matches_rnw, geom=c("x","y"), crs="epsg:32738", keepgeom=TRUE) #renewed CFM
-
-# load annual forest cover data
-filelist_temp <- list.files(path = "data/forest_cover_hansen_90m", pattern = "*.tif$", full.names = T) #lists the files
-forest_stack <- rast(filelist_temp) #creates a single SpatRaster with 20 fields
-names_temp <- list.files(path = "data/forest_cover_hansen_90m", pattern = "*.tif$", full.names = F)
-names(forest_stack) <- names_temp
-
-#check projections
-crs(matched_points, describe=T, proj=F)
-crs(matched_points_rnw, describe=T, proj=F) #renewed CFM
-crs(forest_stack, describe=T, proj=F)
-
-#extract forest cover to matched points (only takes a few seconds)
-matched_points_forest <- terra::extract(forest_stack, matched_points, xy=F, bind=TRUE) #bind=TRUE retains attributes
-matched_points_rnw_forest <- terra::extract(forest_stack, matched_points_rnw, xy=F, bind=TRUE) #renewed CFM
-
-#convert to data frame and write to CSV
-#all CFM
-matched_points_forest_df <- as.data.frame(matched_points_forest) #convert to data frame
-matched_points_forest_df <- matched_points_forest_df %>%
-  rename_with(~ gsub('_90m.tif', '', .x)) #remove _90m.tif from forest columns
-names(matched_points_forest_df)
-write_csv(matched_points_forest_df, 'outputs/genetic_matched_points_forest_9Feb2023.csv') #update date
-#renewed CFM
-matched_points_rnw_forest_df <- as.data.frame(matched_points_rnw_forest) #convert to data frame
-matched_points_rnw_forest_df <- matched_points_rnw_forest_df %>%
-  rename_with(~ gsub('_90m.tif', '', .x)) #remove _90m.tif from forest columns
-names(matched_points_rnw_forest_df)
-write_csv(matched_points_rnw_forest_df, 'outputs/genetic_matched_points_rnw_forest_13Feb2023.csv') #update date
-
-#spot check to see if defor and forest cover match
-matched_points_subset <- matched_points_forest_df %>%
-  select(x,y,defor2001, forest2001, defor2002, forest2002, defor2003, forest2003, defor2004, forest2004, defor2005, forest2005, defor2006, forest2006, defor2007, forest2007, defor2008, forest2008, defor2009, forest2009, defor2010, forest2010)
+# #extract forest cover to matched points (only takes a few seconds)
+# matched_points_forest <- terra::extract(forest_stack, matched_points, xy=F, bind=TRUE) #bind=TRUE retains attributes
+# matched_points_rnw_forest <- terra::extract(forest_stack, matched_points_rnw, xy=F, bind=TRUE) #renewed CFM
+# 
+# #convert to data frame and write to CSV
+# #all CFM
+# matched_points_forest_df <- as.data.frame(matched_points_forest) #convert to data frame
+# matched_points_forest_df <- matched_points_forest_df %>%
+#   rename_with(~ gsub('_90m.tif', '', .x)) #remove _90m.tif from forest columns
+# names(matched_points_forest_df)
+# write_csv(matched_points_forest_df, 'outputs/genetic_matched_points_forest_9Feb2023.csv') #update date
+# #renewed CFM
+# matched_points_rnw_forest_df <- as.data.frame(matched_points_rnw_forest) #convert to data frame
+# matched_points_rnw_forest_df <- matched_points_rnw_forest_df %>%
+#   rename_with(~ gsub('_90m.tif', '', .x)) #remove _90m.tif from forest columns
+# names(matched_points_rnw_forest_df)
+# write_csv(matched_points_rnw_forest_df, 'outputs/genetic_matched_points_rnw_forest_13Feb2023.csv') #update date
+# 
+# #spot check to see if defor and forest cover match
+# matched_points_subset <- matched_points_forest_df %>%
+#   select(x,y,defor2001, forest2001, defor2002, forest2002, defor2003, forest2003, defor2004, forest2004, defor2005, forest2005, defor2006, forest2006, defor2007, forest2007, defor2008, forest2008, defor2009, forest2009, defor2010, forest2010)

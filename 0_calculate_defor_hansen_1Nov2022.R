@@ -68,7 +68,7 @@ plot(output.list$defor_2021) #throws an error but appears to work: Error in x$.s
 for2000 <- rast("data/forest/for2000.tif")
 
 # load annual deforestation data generated in the previous step
-filelist_temp <- list.files(path = "data/defor_hansen/annual", full.names = TRUE) #lists the files
+filelist_temp <- list.files(path = "data/defor_hansen/annual_30m", full.names = TRUE) #lists the files
 defor_stack <- rast(filelist_temp) #creates a single SpatRaster with 20 fields
 
 #subtract defor_stack from 2000 forest cover #TAKES A LONG TIME
@@ -107,7 +107,7 @@ for(i in 1:21){ #runs out of memory, do a few years at a time
   forest_i <- for2000 - subset(defor_stack,i)
   output.list.forest[[i]] <- forest_i #save the object to a list
   names(output.list.forest)[i] <- as.character(paste0("forest_",year_i)) #give the object a name
-  f <- file.path("data/forest_cover_hansen/", paste0("forest_", year_i, ".tif"))
+  f <- file.path("data/forest_cover_hansen_30m/", paste0("forest_", year_i, ".tif"))
   writeRaster(forest_i, f, overwrite = TRUE)
 }
 
@@ -117,7 +117,7 @@ for(i in 1:21){ #runs out of memory, do a few years at a time
 #aggregate deforestation data to 90m
 
 # load annual deforestation data generated in the previous step
-filelist_temp <- list.files(path = "data/defor_hansen/annual", full.names = TRUE) #lists the files
+filelist_temp <- list.files(path = "data/defor_hansen/annual_30m", full.names = TRUE) #lists the files
 defor_stack <- rast(filelist_temp) #creates a single SpatRaster with 20 fields
 
 #test for a single layer first
