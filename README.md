@@ -1,4 +1,4 @@
-# madagascar
+# Madagascar political crisis effect on community forests
 
 Code associated with paper: "The effect of a political crisis on performance of community- and state-managed forests in Madagascar"
 
