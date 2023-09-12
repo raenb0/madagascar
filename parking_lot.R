@@ -219,12 +219,14 @@ writeRaster(defor_2021,"data/defor_hansen/defor_2021.tif", overwrite=TRUE)
 
 
 # REORGANIZE MAHALANOBIS MATCHED DATA FOR TWO-PERIOD ANALYSIS -----------------------
+#updated Sept 12 2023 to re-run two-period DiD analysis
+
 library(tidyverse)
 library(dplyr)
 
 #load tabular data if needed
 
-matched <- read_csv('outputs/g.matches_8Jan2023.csv')  #load data, update date
+matched <- read_csv('outputs/genetic.matches_26Feb2023.csv')  #load data, update date
 names(matched)
 
 #add new columns for deforestation
@@ -298,7 +300,7 @@ matched_bind <- rbind(PA_data, CFM_data)
 View(matched_bind)
 
 #write to CSV
-write_csv(matched_bind,'outputs/matched_bind_2pr_90m_8Jan2023.csv') #update date
+write_csv(matched_bind,'outputs/matched_bind_2pr_90m_12Sept2023.csv') #update date
 
 names(matched_bind)
 
@@ -331,7 +333,7 @@ matched_wider$cluster <- as.factor(matched_wider$cluster) #convert "cluster" to 
 #view(matched_wider)
 
 #write to CSV
-write_csv(matched_wider,'outputs/matched_wider_2pr_90m_8Jan2023.csv') #update date
+write_csv(matched_wider,'outputs/matched_wider_2pr_90m_12Sept2023.csv') #update date
 
 ## SPECIFY THE TWO-PERIOD MODEL, DEFORESTATION OUTCOME, CLUSTERED SE -------------------
 #replace UID with cluster? ask Ranaivo/Chris
@@ -501,48 +503,48 @@ did_m1_yr_rnw_robust <- feols(defor ~ CFM*year + distance + pop + riceav_mdg + r
 
 summary(did_m1_yr_rnw_robust, cluster = "cluster")
 
-_____________
-## commented out DiD models for now, not using them for the paper
-# ### DiD model 1, outcome variable: ANNUAL DEFOR -------------------
-# did_m1 <- feols(defor_annual ~ CFM*year
-#                 + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind 
-#                 | UID + year, #should I include year as an FE? ****
-#                 data = matched_yr_wider,
-#                 cluster = "cluster")
-# 
-# summary(did_m1)
-# 
-# ### DiD model 2, interaction term for distance from urban center, outcome variable: ANNUAL DEFOR -------------------
-# #Note from Chris: rice prices increase as you get farther away from Tamatave, so try including an interaction term for distance from urban center (Note from Ranaivo: not exactly, rice prices in remote villages can also be quite low)
-# 
-# did_m2 <- feols(defor_annual ~ CFM*year
-#                 + CFM*year*disturb #interaction term for distance from urban center
-#                 + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind 
-#                 | UID + year + vegtype,
-#                 data = matched_yr_wider,
-#                 cluster = "cluster")
-# 
-# summary(did_m2)
-# 
-# ### DiD model 3, interaction term for development, outcome variable: ANNUAL DEFOR -------------------
-# did_m3 <- feols(defor_annual ~ CFM*year
-#                 + CFM*year*development #interaction term for development
-#                 + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind 
-#                 | UID + year + vegtype,
-#                 data = matched_yr_wider,
-#                 cluster = "cluster")
-# 
-# summary(did_m3)
-# 
-# ### DiD model 4, interaction term for security, outcome variable: ANNUAL DEFOR -------------------
-# did_m4 <- feols(defor_annual ~ CFM*year
-#                 + CFM*year*security #interaction term for security
-#                 + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind 
-#                 | UID + year + vegtype,
-#                 data = matched_yr_wider,
-#                 cluster = "cluster")
-# 
-# summary(did_m4)
+---------------------------
+# commented out DiD models for now, not using them for the paper
+### DiD model 1, outcome variable: ANNUAL DEFOR -------------------
+did_m1 <- feols(defor_annual ~ CFM*year
+                + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind
+                | UID + year, #should I include year as an FE? ****
+                data = matched_yr_wider,
+                cluster = "cluster")
+
+summary(did_m1)
+
+### DiD model 2, interaction term for distance from urban center, outcome variable: ANNUAL DEFOR -------------------
+#Note from Chris: rice prices increase as you get farther away from Tamatave, so try including an interaction term for distance from urban center (Note from Ranaivo: not exactly, rice prices in remote villages can also be quite low)
+
+did_m2 <- feols(defor_annual ~ CFM*year
+                + CFM*year*disturb #interaction term for distance from urban center
+                + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind
+                | UID + year + vegtype,
+                data = matched_yr_wider,
+                cluster = "cluster")
+
+summary(did_m2)
+
+### DiD model 3, interaction term for development, outcome variable: ANNUAL DEFOR -------------------
+did_m3 <- feols(defor_annual ~ CFM*year
+                + CFM*year*development #interaction term for development
+                + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind
+                | UID + year + vegtype,
+                data = matched_yr_wider,
+                cluster = "cluster")
+
+summary(did_m3)
+
+### DiD model 4, interaction term for security, outcome variable: ANNUAL DEFOR -------------------
+did_m4 <- feols(defor_annual ~ CFM*year
+                + CFM*year*security #interaction term for security
+                + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind
+                | UID + year + vegtype,
+                data = matched_yr_wider,
+                cluster = "cluster")
+
+summary(did_m4)
 
 
 # ## Calculate (marginal effects) using ggeffects (error)
