@@ -1,7 +1,7 @@
 # Madagascar impact evaluation
 # Event study, parallel trends test, all CFM, 90m
 # Rachel Neugarten
-# 5 June 2023
+# 12 Feb 2024
 
 
 # Check parallel trends in the pre-crisis period --------------------------
@@ -9,8 +9,9 @@
 library(tidyverse)
 library(fixest)
 
-matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
+matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_region_12Feb2024.csv') #update date, version with region ID added
 names(matched_yr_wider)
+
 matched_yr_pre_crisis <- matched_yr_wider %>% filter(year < 2010) #note year is not a factor in this version
 matched_yr_pre_crisis$year <- as.factor(matched_yr_pre_crisis$year) #convert "year" to a factor
 
@@ -113,7 +114,10 @@ library(tidyverse)
 library(fixest)
 
 #load data if necessary
-matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
+
+#matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_genetic_defor_annual_development_security_4Mar2023.csv') #update date
+
+matched_yr_wider <- read_csv('outputs/matched_yr_wider_90m_region_12Feb2024.csv') #update date, version with region_ID added
 
 names(matched_yr_wider)
 
@@ -128,7 +132,8 @@ event_study_m1 <- feols(defor_annual ~ CFM*year + CFM*yrs_post_crisis #year (num
                         + distance + pop + riceav_mdg + ricesd_mdg + drght + precip + temp + wind
                         | UID,
                         data = matched_yr_wider,
-                        cluster = "cluster")
+                        cluster = "cluster") #original version
+                        #cluster = c("cluster","region_ID"))#cluster by region
 summary(event_study_m1)
 
 # test whether the sum of coefficients are jointly significantly greater than 0
@@ -332,7 +337,7 @@ event_study_m4_table <- tidy(event_study_m4) %>%
 event_study_m5_table <- tidy(event_study_m5) %>%
   mutate(signif = stars.pval(p.value))
 
-write_csv(event_study_m1_table, "outputs/event_study_m1_genetic_defor_annual_4Mar2023.csv") #update date
+write_csv(event_study_m1_table, "outputs/event_study_m1_genetic_defor_annual_12Feb2024_original.csv") #update date
 write_csv(event_study_m2_table, "outputs/event_study_m2_genetic_defor_annual_4Mar2023.csv") #update date
 write_csv(event_study_m3_table, "outputs/event_study_m3_genetic_defor_annual_4Mar2023.csv") #update date
 write_csv(event_study_m4_table, "outputs/event_study_m4_genetic_defor_annual_4Mar2023.csv") #update date

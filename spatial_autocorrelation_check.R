@@ -1,4 +1,6 @@
 # check for spatial autocorrelation ---------------------
+# 29 Jan 2024
+
 # check distances between observations in unique CFM or MNP
 library(tidyverse)
 
